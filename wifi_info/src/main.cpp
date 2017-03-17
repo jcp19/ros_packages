@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     std::string networks = exec(cmd.c_str());
     msg.address = networks;
 
-    yy_scan_string(netwotks.c_str());
+    yy_scan_string(networks.c_str());
     yylex();
 
     /**
