@@ -200,7 +200,7 @@ FIND_PACKAGE(FLEX REQUIRED)
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 
-add_executable(wifi_info src/main.cpp src/lex.yy.cpp)
+add_executable(wifi_info src/lex.yy.cpp)
 target_link_libraries(wifi_info ${catkin_LIBRARIES} ${FLEX_LIBRARIES})
 add_dependencies(wifi_info wifi_info_generate_messages_cpp)
-add_definitions(-std=c++11)
+add_definitions(-std=c++11 -lfl)
