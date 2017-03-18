@@ -20,42 +20,45 @@ wifi_info::wifi * info;
 
 %%
 Cell	{ 
-          //wifi_info::wifi * tp = info;
+          ;
         }
 
-"Address: ([0-9]+:)+[0-9]+" {
-/*
-			using namespace std;
-			string s(yytext);
-			string address = s.erase(0, strlen("Address: "));
-			(*info).address = address;
-*/
+Address:[[:space:]]([0-9A-F]+:)+[0-9A-F]+ {
+			std::string s(yytext);
+			std::string address = s.erase(0, strlen("Address: "));
+			info->address = address;
 		}
-"Channel:[0-9]+" {
-/*
-		using namespace std;
-		string s(yytext);
-		string schannel = s.erase(0, strlen("Channel:"));
-		int channel = stoi(schannel);
-		(*info).channel = channel;
-*/
+Channel:[0-9]+ {
+		std::string s(yytext);
+		std::string schannel = s.erase(0, strlen("Channel:"));
+		int channel = std::stoi(schannel);
+		info->channel = channel;
 }
 
-"ESSID:\"[^\"]+\"" {
-/*
-		using namespace std;
-		string s(yytext);
-		string ssid = s.erase(0, strlen("ESSID:\""));
-		ssid.erase(ssid.size()-2, ssid.size());
-		(*info).essid = ssid;
-*/
+ESSID:\"[^\"]+\" {
+		std::string s(yytext);
+		std::string essid = s.erase(0, strlen("ESSID:\""));
+		essid.erase(essid.size()-1, essid.size());
+		info->essid = essid;
 		return NETWORK_READ;
-
 }
+
+Quality=[0-9]+\/[0-9]+ {
+		std::string q(yytext);
+		//info->quality = q;
+	}
+
+Signal[[:space:]]level=-[0-9]+ {
+		std::string sl(yytext);
+		//info->signal_level_dBm = sl;
+}	
+
 
 <<EOF>> { return END; }
-
+.|\n {;}
 %%
+
+/* por  */
 
 extern "C" {
   int yywrap();
@@ -91,6 +94,10 @@ std::string exec(const char* cmd) {
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "wifi_info");
+  if(argc < 2){
+	std::cerr << "You need to pass the interface name";
+	return 1;
+  }
   ros::NodeHandle n;
 
   ros::Publisher wifi_pub = n.advertise<wifi_info::wifi>("wifi", 1000);
@@ -108,10 +115,13 @@ int main(int argc, char **argv)
 
     yyFlexLexer lex;
     lex.switch_streams(&ss);
+    info = new wifi_info::wifi();
     while(lex.yylex() == NETWORK_READ){
-	info = new wifi_info::wifi();
         wifi_pub.publish(*info);
+	//clean shit
+	info = new wifi_info::wifi();
     }
+    //clean shit
 
     ros::spinOnce();
     loop_rate.sleep();

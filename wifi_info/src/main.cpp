@@ -6,8 +6,6 @@
 #include <stdio.h>
 #include <string>
 
-
-
 std::string exec(const char* cmd) {
     char buffer[128];
     std::string result = "";
@@ -46,8 +44,9 @@ int main(int argc, char **argv)
     std::string networks = exec(cmd.c_str());
     msg.address = networks;
 
-    yy_scan_string(networks.c_str());
-    yylex();
+
+    //yy_scan_string(networks.c_str());
+    //yylex();
 
     /**
      * The publish() function is how you send messages. The parameter

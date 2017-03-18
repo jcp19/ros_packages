@@ -331,8 +331,8 @@ typedef unsigned char YY_CHAR;
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
 
-#define YY_NUM_RULES 5
-#define YY_END_OF_BUFFER 6
+#define YY_NUM_RULES 8
+#define YY_END_OF_BUFFER 9
 /* This struct is not used in this scanner,
    but its presence is necessary. */
 struct yy_trans_info
@@ -340,32 +340,33 @@ struct yy_trans_info
 	flex_int32_t yy_verify;
 	flex_int32_t yy_nxt;
 	};
-static yyconst flex_int16_t yy_accept[61] =
+static yyconst flex_int16_t yy_accept[65] =
     {   0,
-        0,    0,    6,    5,    5,    5,    5,    0,    0,    0,
-        0,    0,    0,    0,    0,    0,    1,    0,    0,    0,
+        0,    0,    9,    7,    7,    7,    7,    7,    7,    0,
         0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+        0,    0,    1,    0,    0,    0,    0,    0,    0,    0,
         0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-        0,    0,    0,    0,    0,    4,    0,    3,    0,    0,
-        0,    0,    0,    0,    0,    0,    0,    0,    2,    0
+        0,    0,    0,    0,    0,    0,    0,    0,    3,    4,
+        0,    0,    0,    0,    0,    0,    5,    0,    2,    0,
+        0,    0,    6,    0
     } ;
 
 static yyconst flex_int32_t yy_ec[256] =
     {   0,
+        1,    1,    1,    1,    1,    1,    1,    1,    2,    3,
+        2,    2,    2,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    2,    1,    3,    1,    1,    1,    1,    1,    4,
-        5,    1,    6,    1,    7,    1,    1,    8,    1,    1,
-        1,    1,    1,    1,    1,    1,    9,   10,    1,    1,
-        1,    1,    1,    1,   11,    1,   12,   13,   14,    1,
+        1,    2,    1,    4,    1,    1,    1,    1,    1,    1,
+        1,    1,    1,    1,    5,    1,    6,    7,    7,    7,
+        7,    7,    7,    7,    7,    7,    7,    8,    1,    1,
+        9,    1,    1,    1,   10,   11,   12,   13,   14,   11,
         1,    1,   15,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,   16,    1,    1,    1,    1,    1,    1,    1,
-       17,    1,   18,   19,    1,    1,   20,    1,    1,   21,
+       16,    1,   17,    1,    1,    1,    1,    1,    1,    1,
+        1,    1,    1,    1,    1,    1,   18,    1,    1,   19,
 
-       22,    1,    1,   23,    1,    1,    1,   24,    1,   25,
-        1,    1,    1,   26,   27,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
+       20,    1,   21,   22,   23,    1,    1,   24,    1,   25,
+        1,    1,    1,   26,   27,   28,   29,   30,    1,    1,
+       31,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -382,63 +383,66 @@ static yyconst flex_int32_t yy_ec[256] =
         1,    1,    1,    1,    1
     } ;
 
-static yyconst flex_int32_t yy_meta[28] =
+static yyconst flex_int32_t yy_meta[32] =
     {   0,
+        1,    1,    1,    2,    1,    1,    3,    1,    1,    3,
+        3,    3,    3,    3,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1
+        1
     } ;
 
-static yyconst flex_int16_t yy_base[62] =
+static yyconst flex_int16_t yy_base[69] =
     {   0,
-        0,    4,   70,   71,   48,    0,   52,   46,   42,   45,
-       48,   37,   38,   36,   45,   37,   71,   33,   44,   29,
-       33,   44,   26,   28,   48,   40,   39,   31,   45,   29,
-       26,   40,   35,   39,   24,   33,   21,   30,   28,   30,
-       28,   16,   30,   23,   25,   71,   12,   71,   23,   18,
-       22,   20,    8,   16,   14,   11,    1,    0,   71,   71,
-        0
+        0,    8,   77,   78,   57,    1,   58,   45,   50,   53,
+       47,   52,   52,   50,   46,   40,   41,   39,   48,   38,
+       36,   40,   78,   34,   45,   34,   38,   28,   34,   45,
+       24,   27,   23,   25,   44,   16,    0,   38,   37,    0,
+       35,   19,    2,   35,   37,   33,   19,    0,   31,   78,
+        0,    7,   28,   28,   14,    0,   26,    8,   22,   10,
+       10,    6,    4,   78,   25,   28,    6,    5
     } ;
 
-static yyconst flex_int16_t yy_def[62] =
+static yyconst flex_int16_t yy_def[69] =
     {   0,
-       61,   61,   60,   60,   60,   60,   60,   60,   60,   60,
-       60,   60,   60,   60,   60,   60,   60,   60,   60,   60,
-       60,   60,   60,   60,   60,   60,   60,   60,   60,   60,
-       60,   60,   60,   60,   60,   60,   60,   60,   60,   60,
-       60,   60,   60,   60,   60,   60,   60,   60,   60,   60,
-       60,   60,   60,   60,   60,   60,   60,   60,   60,    0,
-       60
+       65,   65,   64,   64,   64,   64,   64,   64,   64,   64,
+       64,   64,   64,   64,   64,   64,   64,   64,   64,   64,
+       64,   64,   64,   64,   64,   64,   64,   64,   64,   64,
+       64,   64,   64,   64,   64,   64,   64,   64,   64,   66,
+       64,   64,   64,   64,   66,   64,   64,   67,   64,   64,
+       64,   64,   67,   64,   64,   68,   64,   64,   68,   64,
+       64,   64,   64,    0,   64,   64,   64,   64
     } ;
 
-static yyconst flex_int16_t yy_nxt[99] =
+static yyconst flex_int16_t yy_nxt[110] =
     {   0,
-        4,   60,   60,   60,   60,   59,   60,   60,   60,   60,
-        5,    6,   60,    7,    5,    6,   60,    7,   58,   57,
-       56,    9,   10,   55,   54,   53,   52,   51,   50,   49,
-       48,   47,   46,   45,   44,   43,   42,   41,   40,   39,
-       38,   37,   36,   35,   34,   33,   32,   31,   30,   29,
-       28,   27,   26,   25,   24,   23,   22,   21,   20,   19,
-       18,   17,   16,   15,   14,   13,   12,   11,    8,   60,
-        3,   60,   60,   60,   60,   60,   60,   60,   60,   60,
-       60,   60,   60,   60,   60,   60,   60,   60,   60,   60,
-       60,   60,   60,   60,   60,   60,   60,   60
+       64,   42,   42,   48,   48,   54,   51,   59,   53,    5,
+       63,    6,   63,    7,   62,    8,    9,    5,   61,    6,
+       11,    7,   12,    8,    9,    4,    4,    4,   45,   56,
+       45,   60,   57,   58,   57,   56,   55,   49,   52,   51,
+       50,   49,   47,   46,   44,   43,   41,   40,   39,   38,
+       37,   36,   35,   34,   33,   32,   31,   30,   29,   28,
+       27,   26,   25,   24,   23,   22,   21,   20,   19,   18,
+       17,   16,   15,   14,   13,   10,   64,    3,   64,   64,
+       64,   64,   64,   64,   64,   64,   64,   64,   64,   64,
+       64,   64,   64,   64,   64,   64,   64,   64,   64,   64,
 
+       64,   64,   64,   64,   64,   64,   64,   64,   64
     } ;
 
-static yyconst flex_int16_t yy_chk[99] =
+static yyconst flex_int16_t yy_chk[110] =
     {   0,
-       61,    0,    0,    0,    0,   58,    0,    0,    0,    0,
-        1,    1,    0,    1,    2,    2,    0,    2,   57,   56,
-       55,    6,    6,   54,   53,   52,   51,   50,   49,   47,
-       45,   44,   43,   42,   41,   40,   39,   38,   37,   36,
-       35,   34,   33,   32,   31,   30,   29,   28,   27,   26,
-       25,   24,   23,   22,   21,   20,   19,   18,   16,   15,
-       14,   13,   12,   11,   10,    9,    8,    7,    5,    3,
-       60,   60,   60,   60,   60,   60,   60,   60,   60,   60,
-       60,   60,   60,   60,   60,   60,   60,   60,   60,   60,
-       60,   60,   60,   60,   60,   60,   60,   60
+        0,   37,   37,   43,   43,   51,   51,   68,   67,    1,
+       63,    1,   62,    1,   61,    1,    1,    2,   60,    2,
+        6,    2,    6,    2,    2,   65,   65,   65,   66,   59,
+       66,   58,   57,   55,   54,   53,   52,   49,   47,   46,
+       45,   44,   42,   41,   39,   38,   36,   35,   34,   33,
+       32,   31,   30,   29,   28,   27,   26,   25,   24,   22,
+       21,   20,   19,   18,   17,   16,   15,   14,   13,   12,
+       11,   10,    9,    8,    7,    5,    3,   64,   64,   64,
+       64,   64,   64,   64,   64,   64,   64,   64,   64,   64,
+       64,   64,   64,   64,   64,   64,   64,   64,   64,   64,
 
+       64,   64,   64,   64,   64,   64,   64,   64,   64
     } ;
 
 /* The intent behind this definition is that it'll catch
@@ -449,16 +453,23 @@ static yyconst flex_int16_t yy_chk[99] =
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 #line 1 "parser.l"
-#line 3 "parser.l"
+#line 4 "parser.l"
+#include "ros/ros.h"
 #include "wifi_info/wifi.h"
 #include <string>
 #include <cstring>
-wifi_info::wifi * info = nullptr;
+#include <sstream>
+#include <iostream>
+#include <stdexcept>
+#include <stdio.h>
+
+wifi_info::wifi * info;
 
 // return values:
 #define NETWORK_READ 1
+#define END 2
 
-#line 462 "lex.yy.cpp"
+#line 473 "lex.yy.cpp"
 
 #define INITIAL 0
 
@@ -563,9 +574,9 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 13 "parser.l"
+#line 21 "parser.l"
 
-#line 569 "lex.yy.cpp"
+#line 580 "lex.yy.cpp"
 
 	if ( !(yy_init) )
 		{
@@ -618,13 +629,13 @@ yy_match:
 			while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
-				if ( yy_current_state >= 61 )
+				if ( yy_current_state >= 65 )
 					yy_c = yy_meta[(unsigned int) yy_c];
 				}
 			yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
 			++yy_cp;
 			}
-		while ( yy_base[yy_current_state] != 71 );
+		while ( yy_base[yy_current_state] != 78 );
 
 yy_find_action:
 		yy_act = yy_accept[yy_current_state];
@@ -650,53 +661,76 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 14 "parser.l"
+#line 22 "parser.l"
 { 
-          wifi_info::wifi * tp = info;
-          info = new wifi_info::wifi();
+          ;
         }
 	YY_BREAK
 case 2:
+/* rule 2 can match eol */
 YY_RULE_SETUP
-#line 19 "parser.l"
+#line 26 "parser.l"
 {
-			using namespace std;
-			string s(yytext);
-			string address = s.erase(0, strlen("Address: "));
-			(*info).address = address;
+			std::string s(yytext);
+			std::string address = s.erase(0, strlen("Address: "));
+			info->address = address;
 		}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 25 "parser.l"
+#line 31 "parser.l"
 {
-		using namespace std;
-		string s(yytext);
-		string schannel = s.erase(0, strlen("Channel:"));
+		std::string s(yytext);
+		std::string schannel = s.erase(0, strlen("Channel:"));
 		int channel = std::stoi(schannel);
-		(*info).channel = channel;
+		info->channel = channel;
 }
 	YY_BREAK
 case 4:
+/* rule 4 can match eol */
 YY_RULE_SETUP
-#line 33 "parser.l"
+#line 38 "parser.l"
 {
-		using namespace std;
-		string s(yytext);
-		string ssid = s.erase(0, strlen("ESSID:\""));
-		ssid.erase(ssid.size()-2, ssid.size());
-		(*info).essid = ssid;
+		std::string s(yytext);
+		std::string essid = s.erase(0, strlen("ESSID:\""));
+		essid.erase(essid.size()-1, essid.size());
+		info->essid = essid;
 		return NETWORK_READ;
 }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 42 "parser.l"
+#line 46 "parser.l"
+{
+		std::string q(yytext);
+		//info->quality = q;
+	}
+	YY_BREAK
+case 6:
+/* rule 6 can match eol */
+YY_RULE_SETUP
+#line 51 "parser.l"
+{
+		std::string sl(yytext);
+		//info->signal_level_dBm = sl;
+}	
+	YY_BREAK
+case YY_STATE_EOF(INITIAL):
+#line 57 "parser.l"
+{ return END; }
+	YY_BREAK
+case 7:
+/* rule 7 can match eol */
+YY_RULE_SETUP
+#line 58 "parser.l"
+{;}
+	YY_BREAK
+case 8:
+YY_RULE_SETUP
+#line 59 "parser.l"
 ECHO;
 	YY_BREAK
-#line 698 "lex.yy.cpp"
-case YY_STATE_EOF(INITIAL):
-	yyterminate();
+#line 734 "lex.yy.cpp"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -1075,7 +1109,7 @@ int yyFlexLexer::yy_get_next_buffer()
 		while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
-			if ( yy_current_state >= 61 )
+			if ( yy_current_state >= 65 )
 				yy_c = yy_meta[(unsigned int) yy_c];
 			}
 		yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
@@ -1103,11 +1137,11 @@ int yyFlexLexer::yy_get_next_buffer()
 	while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
-		if ( yy_current_state >= 61 )
+		if ( yy_current_state >= 65 )
 			yy_c = yy_meta[(unsigned int) yy_c];
 		}
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
-	yy_is_jam = (yy_current_state == 60);
+	yy_is_jam = (yy_current_state == 64);
 
 	return yy_is_jam ? 0 : yy_current_state;
 }
@@ -1594,9 +1628,11 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 42 "parser.l"
+#line 59 "parser.l"
 
 
+
+/* por  */
 
 extern "C" {
   int yywrap();
@@ -1604,5 +1640,68 @@ extern "C" {
 
 int yyFlexLexer::yywrap() {
   return ::yywrap();
+}
+
+extern "C" {
+  YY_BUFFER_STATE yy_scan_string(const char *);
+}
+
+std::string exec(const char* cmd) {
+    char buffer[128];
+    std::string result = "";
+    FILE* pipe = popen(cmd, "r");
+    if (!pipe) throw std::runtime_error("popen() failed!");
+    try {
+        while (!feof(pipe)) {
+            if (fgets(buffer, 128, pipe) != NULL)
+                result += buffer;
+        }
+    } catch (...) {
+        pclose(pipe);
+        throw;
+    }
+    pclose(pipe);
+    return result;
+}
+
+/* It is expected that the first argument(after remaps) is the name of the interface name */
+int main(int argc, char **argv)
+{
+  ros::init(argc, argv, "wifi_info");
+  if(argc < 2){
+	std::cerr << "You need to pass the interface name";
+	return 1;
+  }
+  ros::NodeHandle n;
+
+  ros::Publisher wifi_pub = n.advertise<wifi_info::wifi>("wifi", 1000);
+
+  ros::Rate loop_rate(1);
+
+  while (ros::ok())
+  {
+    std::string cmd = "iwlist ";
+    cmd.append(argv[1]);
+    cmd.append(" scan | grep -v \"IE: Unknown\"");
+    std::string networks = exec(cmd.c_str());
+
+    std::istringstream ss(networks);
+
+    yyFlexLexer lex;
+    lex.switch_streams(&ss);
+    info = new wifi_info::wifi();
+    while(lex.yylex() == NETWORK_READ){
+        wifi_pub.publish(*info);
+	//clean shit
+	info = new wifi_info::wifi();
+    }
+    //clean shit
+
+    ros::spinOnce();
+    loop_rate.sleep();
+  }
+
+
+  return 0;
 }
 
