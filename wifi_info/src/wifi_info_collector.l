@@ -45,20 +45,20 @@ ESSID:\"[^\"]+\" {
 
 Quality=[0-9]+\/[0-9]+ {
 		std::string q(yytext);
-		//info->quality = q;
+		q.erase(0, strlen("Quality="));
+		info->quality = q;
 	}
 
 Signal[[:space:]]level=-[0-9]+ {
 		std::string sl(yytext);
-		//info->signal_level_dBm = sl;
+		sl.erase(0, strlen("Signal level="));
+		info->signal_level_dBm = std::stoi(sl);
 }	
 
 
 <<EOF>> { return END; }
 .|\n {;}
 %%
-
-/* por  */
 
 extern "C" {
   int yywrap();
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 {
   ros::init(argc, argv, "wifi_info");
   if(argc < 2){
-	std::cerr << "You need to pass the interface name";
+	std::cerr << "You need to pass the interface name" << std::endl;
 	return 1;
   }
   ros::NodeHandle n;
@@ -117,11 +117,12 @@ int main(int argc, char **argv)
     lex.switch_streams(&ss);
     info = new wifi_info::wifi();
     while(lex.yylex() == NETWORK_READ){
-        wifi_pub.publish(*info);
-	//clean shit
+        // create a new info to ensure that no old data field is used in a different network if some field is ommited 
+        wifi_pub.publish(*info); 
+	delete(info);
 	info = new wifi_info::wifi();
     }
-    //clean shit
+    delete(info);
 
     ros::spinOnce();
     loop_rate.sleep();
