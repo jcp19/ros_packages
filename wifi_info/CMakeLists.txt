@@ -162,6 +162,8 @@ FIND_PACKAGE(FLEX REQUIRED)
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 add_executable(wifi_info src/wifi_info_collector.cpp)
+add_executable(wifi_beeper src/wifi_beeper.cpp)
 target_link_libraries(wifi_info ${catkin_LIBRARIES} ${FLEX_LIBRARIES})
+target_link_libraries(wifi_beeper ${catkin_LIBRARIES})
 add_dependencies(wifi_info wifi_info_generate_messages_cpp)
 add_definitions(-std=c++11 -lfl)
