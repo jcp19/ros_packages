@@ -1665,6 +1665,8 @@ std::string exec(const char* cmd) {
 }
 
 /* It is expected that the first argument(after remaps) is the name of the interface name */
+/* If the 3rd argument is provided, it is considered to be te name of the network to analyse - only data of that network will 
+be printed */
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "wifi_info");
@@ -1690,11 +1692,22 @@ int main(int argc, char **argv)
     yyFlexLexer lex;
     lex.switch_streams(&ss);
     info = new wifi_info::wifi();
-    while(lex.yylex() == NETWORK_READ){
-        // create a new info to ensure that no old data field is used in a different network if some field is ommited 
-        wifi_pub.publish(*info); 
-	delete(info);
-	info = new wifi_info::wifi();
+    if(argc == 2){
+    	while(lex.yylex() == NETWORK_READ){
+      	    // create a new info to ensure that no old data field is used in a different network if some field is ommited 
+            wifi_pub.publish(*info); 
+	    delete(info);
+	    info = new wifi_info::wifi();
+        }
+    } else {
+	std::string essid = std::string(argv[2]);
+	while(lex.yylex() == NETWORK_READ){
+            if(info->essid == essid){
+                wifi_pub.publish(*info); 
+            }
+	    delete(info);
+	    info = new wifi_info::wifi();
+        }
     }
     delete(info);
 
