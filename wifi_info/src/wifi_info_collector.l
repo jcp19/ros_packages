@@ -102,7 +102,7 @@ int main(int argc, char **argv)
   }
   ros::NodeHandle n;
 
-  ros::Publisher wifi_pub = n.advertise<wifi_info::wifi>("wifi", 2);
+  ros::Publisher wifi_pub = n.advertise<wifi_info::wifi>("wifi", 1000);
 
   ros::Rate loop_rate(1);
 

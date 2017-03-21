@@ -7,22 +7,15 @@
 
 // string essid;
 ros::Publisher pub;
+ros::Rate * rates[10];
+int n_msgs;
+kobuki_msgs::Sound sound;
 
 void beeperCallback(const wifi_info::wifi::ConstPtr& msg)
 {
   // if(msg->essid == essid){ } // For now, it will beep for any network
-  kobuki_msgs::Sound sound;
-  sound.value = 3; // beeping sound
-
   int sl = msg->signal_level_dBm;
-  int n_msgs = 9 - sl/-10;
-  ros::Rate r(n_msgs);
-
-  for(int i = 1; i < n_msgs; i++){
-    pub.publish(sound);
-    r.sleep();
-  }
-  
+  n_msgs = (9 - sl/-10)/2;
 }
 
 /* The first argument should be the essid of the network to track */
@@ -30,12 +23,19 @@ int main(int argc, char **argv)
 {
   ros::init(argc, argv, "wifi_beeper");
   ros::NodeHandle n;
-  //essid = string(argv[1]);
+  sound.value = 3; // beeping sound
+  for(int i = 0; i < 10; i++) {
+      rates[i] = new ros::Rate(i+1);
+  }
+
   ros::Subscriber sub = n.subscribe("wifi", 1000, beeperCallback);
   pub = n.advertise<kobuki_msgs::Sound>("mobile_base/commands/sound", 1000);  
-
-  ros::spin();
+  
+  while(true){
+      ros::spinOnce();
+      pub.publish(sound);
+      rates[n_msgs]->sleep();
+  }
 
   return 0;
 }
-
