@@ -106,13 +106,14 @@ int main(int argc, char **argv)
 
   ros::Rate loop_rate(1);
 
+  std::string cmd = "iwlist ";
+  cmd.append(argv[1]);
+  cmd.append(" scan | grep -v \"IE: Unknown\"");
+  char * c = cmd.c_str();
+  
   while (ros::ok())
   {
-    std::string cmd = "iwlist ";
-    cmd.append(argv[1]);
-    cmd.append(" scan | grep -v \"IE: Unknown\"");
-    std::string networks = exec(cmd.c_str());
-
+    std::string networks = exec(c);
     std::istringstream ss(networks);
 
     yyFlexLexer lex;
