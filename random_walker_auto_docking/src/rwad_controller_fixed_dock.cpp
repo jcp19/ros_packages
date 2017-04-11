@@ -1,5 +1,6 @@
 #include "ros/ros.h"
 #include "kobuki_msgs/SensorState.h"
+#include "kobuki_msgs/Led.h"
 #include <sstream>
 
 /* possible robot states */
@@ -29,12 +30,15 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "rwad_controller");
   ros::NodeHandle n;
   ros::Subscriber sub = n.subscribe("/mobile_base/sensors/core", 1, batteryCallback);
-  ros::Publisher pub =  n.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
+  ros::Publisher pubVel =  n.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
+  ros::Publisher pubLed =  n.advertise<kobuki_msgs::Led>("mobile_base/commands/led1", 1);
   while(true){
     ros::spinOnce();
     if(battery_percentage <= MINIMUM_LEVEL && mode = RANDOM_WALK){
       mode = SEARCHING_DOCK;
-      // LIGAR LED
+      kobuki_msgs::Led ledmsg;
+      ledmsg.value = 2;
+      pubLed.
     } else if(battery_percentage >= MAXIMUM_LEVEL && mode = DOCKED){
       mode = RANDOM_WALK;
     }

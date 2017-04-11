@@ -66,10 +66,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+#generate_messages(
+#  DEPENDENCIES
+#  std_msgs  # Or other packages containing msgs
+#)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -195,3 +195,9 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+include_directories(include ${catkin_INCLUDE_DIRS})
+add_executable(rwad_controller src/rwad_controller.cpp)
+target_link_libraries(rwad_controller ${catkin_LIBRARIES})
+#add_dependencies(rwad_controller rwad_controller_generate_messages_cpp)
+add_definitions(-std=c++11)

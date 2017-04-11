@@ -1,5 +1,7 @@
 #include "ros/ros.h"
 #include "kobuki_msgs/SensorState.h"
+#include "kobuki_msgs/Led.h"
+#include "geometry_msgs/Twist.h"
 #include <sstream>
 
 /* possible robot states */
@@ -29,22 +31,40 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "rwad_controller");
   ros::NodeHandle n;
   ros::Subscriber sub = n.subscribe("/mobile_base/sensors/core", 1, batteryCallback);
-  ros::Publisher pub =  n.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
+  ros::Publisher pubVel =  n.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
+  ros::Publisher pubLed =  n.advertise<kobuki_msgs::Led>("mobile_base/commands/led1", 1);
+  ros::Rate r(4);
   while(true){
     ros::spinOnce();
-    if(battery_percentage <= MINIMUM_LEVEL && mode = RANDOM_WALK){
+    if(battery_percentage <= MINIMUM_LEVEL && mode == RANDOM_WALK){
       mode = SEARCHING_DOCK;
-      // LIGAR LED
-    } else if(battery_percentage >= MAXIMUM_LEVEL && mode = DOCKED){
+      kobuki_msgs::Led ledmsg;
+      ledmsg.value = 2;
+      pubLed.publish(ledmsg);
+    } else if(battery_percentage >= MAXIMUM_LEVEL && mode == DOCKED){
       mode = RANDOM_WALK;
+      kobuki_msgs::Led ledmsg;
+      ledmsg.value = 0;
+      pubLed.publish(ledmsg);
     }
 
-    /* fazer coisas com base no modo */
     switch(mode){
-      case DOCKED: /* mandar mensagens com vel a 0 para impedir de andar */
+      case DOCKED: 
+      {
+           // Empty message sent to override messages from nodes with less priority
+           geometry_msgs::Twist vel;
+           vel.linear.x = vel.linear.y = vel.linear.z = vel.angular.x = vel.angular.y = vel.angular.z = 0.0;
+           pubVel.publish(vel); 
+           break;
+      }
       case SEARCHING_DOCK:
-      case RANDOM_WALK: /* nao mandar mensagens */
+           // call the autodock action
+           break;
+      case RANDOM_WALK: 
+           // no messages are sent, this way the messages from nodes with less priority will be read
+           break;
     }
+    r.sleep();
   }
   return 0;
 }
