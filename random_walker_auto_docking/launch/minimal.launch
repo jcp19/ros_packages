@@ -1,12 +1,12 @@
 <launch>
-    <include file="$(find turtlebot_bringup)/launch/minimal.launch"/>
-    <!-- load priorities of the random walk -->
-    <param name="cmd_vel_mux/yaml_cfg_file" value="$(find random_walker_auto_docking)/param/mux.yaml"/>
-    <!-- put action server here -->
+    <include file="$(find random_walker_auto_docking)/launch/tb_bringup.minimal.launch"/>
+
     <include file="$(find kobuki_auto_docking)/launch/minimal.launch"/>
+
+    <param name="AUTODOCK_BATTERY_LEVEL" value="99.4" />
+    <param name="UNDOCK_BATTERY_LEVEL" value="100.0" />
     <node name="rwad" pkg="random_walker_auto_docking" type="rwad_controller"/>
+
     <include file="$(find kobuki_random_walker)/launch/random_walker_app.launch"/>
-    <param name="AUTODOCK_BATTERY_LEVEL" value="" />
-    <param name="UNDOCK_BATTERY_LEVEL" value="" />
     
 </launch>

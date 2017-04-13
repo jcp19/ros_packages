@@ -16,15 +16,15 @@ subscribers:
     priority:    10
   - name:        "RWAD Controller"
     topic:       "input/rwad"
-    timeout:     0.4
+    timeout:     1.0
     priority:    8
   - name:        "Action server for autodocking"
     topic:       "mobile_base/commands/velocity"
-    timeout:     0.3
+    timeout:     1.0
     priority:    7
   - name:        "Kobuki Random Walk"
     topic:       "commands/velocity"
-    timeout:     0.3
+    timeout:     0.5
     priority:    6
   - name:        "Switch"
     topic:       "input/switch"

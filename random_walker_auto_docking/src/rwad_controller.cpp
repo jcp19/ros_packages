@@ -13,7 +13,7 @@
 #define DOCKED 0
 #define SEARCHING_DOCK 1
 #define RANDOM_WALK 2
-int mode = DOCKED; // its assumed that the robot starts in docked state
+int mode = RANDOM_WALK; // its assumed that the robot starts in undocked state
 
 /* values for battery control */
 /* #define MINIMUM_LEVEL 40.0 */
@@ -32,7 +32,6 @@ void batteryCallback(const kobuki_msgs::SensorState::ConstPtr& msg)
   if(msg->charger != 0){
      mode = DOCKED;
   }
-  ROS_INFO("battery_level: %f", battery_percentage);
 }
 
 /* TO-DO:
@@ -49,13 +48,14 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
   ros::Subscriber sub = n.subscribe("/mobile_base/sensors/core", 1, batteryCallback);
   //ros::Publisher pubVel =  n.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
-  ros::Publisher pubVel =  n.advertise<geometry_msgs::Twist>("input/rwad", 1000);
+  ros::Publisher pubVel =  n.advertise<geometry_msgs::Twist>("input/rwad", 10);
   ros::Publisher pubLed =  n.advertise<kobuki_msgs::Led>("mobile_base/commands/led1", 1);
   actionlib::SimpleActionClient<kobuki_msgs::AutoDockingAction> ac("dock_drive_action", true);
+
   double min, max;
   if(ros::param::get(std::string("AUTODOCK_BATTERY_LEVEL"), min) && min > 0.0 && min < 100.0) 
       MINIMUM_LEVEL=min;
-  if(ros::param::get(std::string("UNDOCK_BATTERY_LEVEL"), max) && max > 0.0 && max < 100.0 && max > MINIMUM_LEVEL) 
+  if(ros::param::get(std::string("UNDOCK_BATTERY_LEVEL"), max) && max > 0.0 && max <= 100.0 && max > MINIMUM_LEVEL) 
       MAXIMUM_LEVEL=max;
   ros::Rate r(4);
 
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
       mode = SEARCHING_DOCK;
       /* start service here */
       kobuki_msgs::Led ledmsg;
-      ledmsg.value = 2;
+      ledmsg.value = 3;
       pubLed.publish(ledmsg);
     } else if(battery_percentage >= MAXIMUM_LEVEL && mode == DOCKED){
       mode = RANDOM_WALK;
@@ -74,6 +74,7 @@ int main(int argc, char **argv)
       pubLed.publish(ledmsg);
     }
 
+    ROS_INFO("mode:%d, battery_level: %f", mode, battery_percentage);
     switch(mode){
       case DOCKED: 
       {
@@ -96,9 +97,13 @@ int main(int argc, char **argv)
            {
                actionlib::SimpleClientGoalState state = ac.getState();
                ROS_INFO("Action finished: %s",state.toString().c_str());
+               mode = DOCKED;
            }
            else
+           {
+               mode = RANDOM_WALK;
                ROS_INFO("Action did not finish before the time out.");
+           }
            
            break;
       }
