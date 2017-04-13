@@ -6,5 +6,7 @@
     <include file="$(find kobuki_auto_docking)/launch/minimal.launch"/>
     <node name="rwad" pkg="random_walker_auto_docking" type="rwad_controller"/>
     <include file="$(find kobuki_random_walker)/launch/random_walker_app.launch"/>
+    <param name="AUTODOCK_BATTERY_LEVEL" value="" />
+    <param name="UNDOCK_BATTERY_LEVEL" value="" />
     
 </launch>

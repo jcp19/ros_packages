@@ -9,6 +9,8 @@ project(random_walker_auto_docking)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  actionlib
+  actionlib_msgs
 )
 
 ## System dependencies are found with CMake's conventions
