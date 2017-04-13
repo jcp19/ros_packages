@@ -18,19 +18,19 @@ subscribers:
     topic:       "input/rwad"
     timeout:     0.4
     priority:    8
+  - name:        "Action server for autodocking"
+    topic:       "mobile_base/commands/velocity"
+    timeout:     0.3
+    priority:    7
   - name:        "Kobuki Random Walk"
     topic:       "commands/velocity"
     timeout:     0.3
     priority:    6
-  - name:        "Teleoperation"
-    topic:       "input/teleop"
-    timeout:     1.0
-    priority:    7
   - name:        "Switch"
     topic:       "input/switch"
     timeout:     1.0
-    priority:    6
+    priority:    4
   - name:        "Navigation"
     topic:       "input/navi"
     timeout:     1.0
-    priority:    5
+    priority:    3
