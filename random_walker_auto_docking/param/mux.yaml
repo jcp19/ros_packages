@@ -21,16 +21,8 @@ subscribers:
   - name:        "Action server for autodocking"
     topic:       "mobile_base/commands/velocity"
     timeout:     1.0
-    priority:    7
+    priority:    5
   - name:        "Kobuki Random Walk"
     topic:       "commands/velocity"
     timeout:     0.5
-    priority:    6
-  - name:        "Switch"
-    topic:       "input/switch"
-    timeout:     1.0
-    priority:    4
-  - name:        "Navigation"
-    topic:       "input/navi"
-    timeout:     1.0
     priority:    3

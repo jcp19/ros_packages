@@ -57,7 +57,7 @@ int main(int argc, char **argv)
       MINIMUM_LEVEL=min;
   if(ros::param::get(std::string("UNDOCK_BATTERY_LEVEL"), max) && max > 0.0 && max <= 100.0 && max > MINIMUM_LEVEL) 
       MAXIMUM_LEVEL=max;
-  ros::Rate r(4);
+  ros::Rate r(8);
 
   while(ros::ok()){
     ros::spinOnce();
@@ -90,6 +90,7 @@ int main(int argc, char **argv)
            ROS_INFO("Waiting for action server to start."); 
            ac.waitForServer();
            kobuki_msgs::AutoDockingGoal goal; 
+           /* this section is not working properly */
            ac.sendGoal(goal);
            bool finished_before_timeout = ac.waitForResult(ros::Duration(15.0));
 

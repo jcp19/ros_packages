@@ -3,8 +3,8 @@
 
     <include file="$(find kobuki_auto_docking)/launch/minimal.launch"/>
 
-    <param name="AUTODOCK_BATTERY_LEVEL" value="99.4" />
-    <param name="UNDOCK_BATTERY_LEVEL" value="100.0" />
+    <param name="AUTODOCK_BATTERY_LEVEL" value="90.0" />
+    <param name="UNDOCK_BATTERY_LEVEL" value="95.0" />
     <node name="rwad" pkg="random_walker_auto_docking" type="rwad_controller"/>
 
     <include file="$(find kobuki_random_walker)/launch/random_walker_app.launch"/>
