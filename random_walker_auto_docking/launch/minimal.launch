@@ -1,0 +1,9 @@
+<launch>
+    <include file="$(find turtlebot_bringup)/launch/minimal.launch"/>
+    <!-- load priorities of the random walk -->
+    <param name="cmd_vel_mux/yaml_cfg_file" value="$(find random_walker_auto_docking)/param/mux.yaml"/>
+    <!-- put action server here -->
+    <node name="rwad" pkg="random_walker_auto_docking" type="rwad_controller"/>
+    <include file="$(find kobuki_random_walker)/launch/random_walker_app.launch"/>
+    
+</launch>
