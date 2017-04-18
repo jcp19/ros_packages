@@ -35,8 +35,6 @@ void batteryCallback(const kobuki_msgs::SensorState::ConstPtr& msg)
 }
 
 /* TO-DO:
-   call action for dockin
-   add parameters to lowest value and maximum value battery (param server??)
    create a class for this node
    documentation
    put callbacks on action client 
