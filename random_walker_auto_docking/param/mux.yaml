@@ -13,16 +13,16 @@ subscribers:
   - name:        "Safe reactive controller"
     topic:       "safety_controller"
     timeout:     0.2
-    priority:    10
+    priority:    6
   - name:        "RWAD Controller"
     topic:       "rwad"
     timeout:     1.0
-    priority:    8
+    priority:    7
   - name:        "Action server for autodocking"
     topic:       "auto_docking"
     timeout:     1.0
-    priority:    5
+    priority:    8
   - name:        "Kobuki Random Walk"
     topic:       "random_walker"
-    timeout:     0.5
+    timeout:     1.0
     priority:    3

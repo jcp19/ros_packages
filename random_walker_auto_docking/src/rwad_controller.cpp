@@ -6,6 +6,7 @@
 // #include <kobuki_auto_docking/auto_docking_ros.hpp>
 #include "kobuki_msgs/SensorState.h"
 #include "kobuki_msgs/Led.h"
+#include "std_msgs/Empty.h"
 #include "geometry_msgs/Twist.h"
 #include <sstream>
 
@@ -29,9 +30,9 @@ void batteryCallback(const kobuki_msgs::SensorState::ConstPtr& msg)
 {
   uint8_t battery_level = msg->battery;
   battery_percentage = (battery_level * 100.0)/MAX_BATTERY;
-  if(msg->charger != 0){
+  /*if(msg->charger != 0){
      mode = DOCKED;
-  }
+  }*/
 }
 
 /* TO-DO:
@@ -48,6 +49,10 @@ int main(int argc, char **argv)
   //ros::Publisher pubVel =  n.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
   ros::Publisher pubVel =  n.advertise<geometry_msgs::Twist>("input/rwad", 10);
   ros::Publisher pubLed =  n.advertise<kobuki_msgs::Led>("mobile_base/commands/led1", 1);
+  ros::Publisher enableRandWalk = n.advertise<std_msgs::Empty>("kobuki_random_walker/enable", 1);
+  ros::Publisher disableRandWalk = n.advertise<std_msgs::Empty>("kobuki_random_walker/disable", 1);
+  ros::Publisher enableSafetyController = n.advertise<std_msgs::Empty>("kobuki_safety_controller/enable", 1);
+  ros::Publisher disableSafetyController = n.advertise<std_msgs::Empty>("kobuki_safety_controller/disable", 1);
   actionlib::SimpleActionClient<kobuki_msgs::AutoDockingAction> ac("dock_drive_action", true);
 
   double min, max;
@@ -66,6 +71,9 @@ int main(int argc, char **argv)
       ledmsg.value = 3;
       pubLed.publish(ledmsg);
     } else if(battery_percentage >= MAXIMUM_LEVEL && mode == DOCKED){
+      std_msgs::Empty e;
+      enableRandWalk.publish(e); 
+      enableSafetyController.publish(e);
       mode = RANDOM_WALK;
       kobuki_msgs::Led ledmsg;
       ledmsg.value = 0;
@@ -75,13 +83,7 @@ int main(int argc, char **argv)
     ROS_INFO("mode:%d, battery_level: %f", mode, battery_percentage);
     switch(mode){
       case DOCKED: 
-      {
-           // Empty message sent to override messages from nodes with less priority
-           geometry_msgs::Twist vel;
-           vel.linear.x = vel.linear.y = vel.linear.z = vel.angular.x = vel.angular.y = vel.angular.z = 0.0;
-           pubVel.publish(vel); 
            break;
-      }
       case SEARCHING_DOCK:
       {
            // call the autodock action
@@ -96,6 +98,9 @@ int main(int argc, char **argv)
            {
                actionlib::SimpleClientGoalState state = ac.getState();
                ROS_INFO("Action finished: %s",state.toString().c_str());
+               std_msgs::Empty e;
+               disableRandWalk.publish(e);
+               disableSafetyController.publish(e);
                mode = DOCKED;
            }
            else
@@ -103,9 +108,7 @@ int main(int argc, char **argv)
                mode = RANDOM_WALK;
                ROS_INFO("Action did not finish before the time out.");
            }
-           
-           break;
-      }
+      }break;
       case RANDOM_WALK: 
            // no messages are sent, this way the messages from nodes with less priority will be read
            break;
