@@ -1,12 +1,48 @@
 <launch>
     <include file="$(find random_walker_auto_docking)/launch/tb_bringup.minimal.launch"/>
 
-    <include file="$(find kobuki_auto_docking)/launch/minimal.launch"/>
+    <!--<include file="$(find kobuki_auto_docking)/launch/minimal.launch"/>-->
+
+    <node pkg="nodelet" type="nodelet" name="dock_drive" args="load kobuki_auto_docking/AutoDockingNodelet mobile_base_nodelet_manager">
+        <rosparam file="$(find kobuki_auto_docking)/param/auto_docking.yaml" command="load"/>
+        <remap from="dock_drive/odom" to="odom"/>
+        <remap from="dock_drive/core" to="mobile_base/sensors/core"/>
+        <remap from="dock_drive/dock_ir" to="mobile_base/sensors/dock_ir"/>
+        <remap from="dock_drive/motor_power" to="mobile_base/commands/motor_power"/>
+        <remap from="dock_drive/velocity" to="cmd_vel_mux/velocity"/>
+    </node>
 
     <param name="AUTODOCK_BATTERY_LEVEL" value="98.0" />
     <param name="UNDOCK_BATTERY_LEVEL" value="99.0" />
-    <node name="rwad" pkg="random_walker_auto_docking" type="rwad_controller"/>
+    <node name="rwad" pkg="random_walker_auto_docking" type="rwad_controller">
+       <remap from="/input/rwad" to="/cmd_vel_mux/input/rwad"/> 
+    </node>
 
-    <include file="$(find kobuki_random_walker)/launch/random_walker_app.launch"/>
+    <!-- Por ~~random walker~~ , ~~safety controller~~, action server-->
+
+    <node pkg="nodelet" type="nodelet" name="kobuki_safety_controller"
+          args="load kobuki_safety_controller/SafetyControllerNodelet mobile_base_nodelet_manager">
+      <remap from="kobuki_safety_controller/cmd_vel"                  to="cmd_vel_mux/input/safety_controller"/>
+      <remap from="kobuki_safety_controller/events/bumper"            to="mobile_base/events/bumper"/>
+      <remap from="kobuki_safety_controller/events/cliff"             to="mobile_base/events/cliff"/>
+      <remap from="kobuki_safety_controller/events/wheel_drop"        to="mobile_base/events/wheel_drop"/>
+    </node>
+
+     
+    <node pkg="nodelet" type="nodelet" name="kobuki_random_walker_controller"
+          args="load kobuki_random_walker/RandomWalkerControllerNodelet mobile_base_nodelet_manager">
+      <param name="update_rate"                                       value="10.0"/>
+      <param name="linear_velocity"                                   value="0.1"/>
+      <param name="angular_velocity"                                  value="0.5"/>
+      <remap from="kobuki_random_walker_controller/events/bumper"     to="mobile_base/events/bumper"/>
+      <remap from="kobuki_random_walker_controller/events/cliff"      to="mobile_base/events/cliff"/>
+      <remap from="kobuki_random_walker_controller/events/wheel_drop" to="mobile_base/events/wheel_drop"/>
+      <remap from="kobuki_random_walker_controller/commands/led1"     to="mobile_base/commands/led1"/>
+      <remap from="kobuki_random_walker_controller/commands/led2"     to="mobile_base/commands/led2"/>
+      <remap from="kobuki_random_walker_controller/commands/velocity" to="cmd_vel_mux/velocity"/>
+    </node>
+
+
+	<!--    <include file="$(find kobuki_random_walker)/launch/random_walker_app.launch"/> -->
     
 </launch>
