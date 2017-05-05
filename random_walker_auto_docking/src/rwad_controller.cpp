@@ -3,50 +3,58 @@
 #include <actionlib/client/terminal_state.h>
 #include <kobuki_msgs/AutoDockingAction.h> 
 #include <kobuki_msgs/AutoDockingActionGoal.h> 
-// #include <kobuki_auto_docking/auto_docking_ros.hpp>
 #include "kobuki_msgs/SensorState.h"
 #include "kobuki_msgs/Led.h"
+#include "std_msgs/UInt8.h"
 #include "std_msgs/Empty.h"
 #include "geometry_msgs/Twist.h"
 #include <sstream>
 
-/* possible robot states */
+// use value 1 if you want to run it in a simulator or value 0 if not
+#define SIMULATOR 0
+
+#if SIMULATOR
+  // when in simultaion, its assumed that the value of the battery is published in the /bokuki_simulation/battery topic
+  #define BATTERY_TOPIC "/kobuki_simulation/battery"
+  #define CALLBACK_ARG_TYPE std_msgs::UInt8 
+  #define BATTERY_FIELD data 
+#else
+  #define BATTERY_TOPIC "/mobile_base/sensors/core"
+  #define CALLBACK_ARG_TYPE kobuki_msgs::SensorState
+  #define BATTERY_FIELD battery
+#endif
+
+// Possible robot states
 #define DOCKED 0
 #define SEARCHING_DOCK 1
 #define RANDOM_WALK 2
-int mode = RANDOM_WALK; // its assumed that the robot starts in undocked state
 
-/* values for battery control */
-/* #define MINIMUM_LEVEL 40.0 */
-/* #define MAXIMUM_LEVEL 70.0 */
+// change the value if needed to match your robot's max battery value
+#define MAX_BATTERY 160
+
+// its assumed that the robot starts in undocked state
+int mode = RANDOM_WALK; 
+
+// values for battery control 
 double MINIMUM_LEVEL = 40.0;
 double MAXIMUM_LEVEL = 70.0;
  
-/* change the value if needed to match your robot's max battery value */
-#define MAX_BATTERY 160
 float battery_percentage = 0;
 
-void batteryCallback(const kobuki_msgs::SensorState::ConstPtr& msg)
+void batteryCallback(const CALLBACK_ARG_TYPE::ConstPtr& msg)
 {
-  uint8_t battery_level = msg->battery;
+  uint8_t battery_level = msg->BATTERY_FIELD;
   battery_percentage = (battery_level * 100.0)/MAX_BATTERY;
   /*if(msg->charger != 0){
      mode = DOCKED;
   }*/
 }
 
-/* TO-DO:
-   create a class for this node
-   documentation
-   put callbacks on action client 
-*/
-
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "rwad_controller");
   ros::NodeHandle n;
-  ros::Subscriber sub = n.subscribe("/mobile_base/sensors/core", 1, batteryCallback);
-  //ros::Publisher pubVel =  n.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
+  ros::Subscriber sub = n.subscribe(BATTERY_TOPIC, 1, batteryCallback);
   ros::Publisher pubVel =  n.advertise<geometry_msgs::Twist>("input/rwad", 10);
   ros::Publisher pubLed =  n.advertise<kobuki_msgs::Led>("mobile_base/commands/led1", 1);
   ros::Publisher enableRandWalk = n.advertise<std_msgs::Empty>("kobuki_random_walker/enable", 1);
@@ -66,7 +74,8 @@ int main(int argc, char **argv)
     ros::spinOnce();
     if(battery_percentage <= MINIMUM_LEVEL && mode == RANDOM_WALK){
       mode = SEARCHING_DOCK;
-      /* start service here */
+    ROS_INFO("mode:%d, battery_level: %f", mode, battery_percentage);
+      // start service here
       kobuki_msgs::Led ledmsg;
       ledmsg.value = 3;
       pubLed.publish(ledmsg);
@@ -90,9 +99,9 @@ int main(int argc, char **argv)
            ROS_INFO("Waiting for action server to start."); 
            ac.waitForServer();
            kobuki_msgs::AutoDockingGoal goal; 
-           /* this section is not working properly */
+           // this section is not working properly
            ac.sendGoal(goal);
-           bool finished_before_timeout = ac.waitForResult(ros::Duration(15.0));
+           bool finished_before_timeout = ac.waitForResult(ros::Duration(30.0));
 
            if (finished_before_timeout)
            {
