@@ -1,0 +1,52 @@
+<launch>
+  <arg name="manager" value="mobile_base_nodelet_manager"/>
+
+  <!-- mobile base nodelet manager -->
+  <node pkg="nodelet" type="nodelet" name="mobile_base_nodelet_manager" args="manager"/>
+ 
+  <!-- velocity commands multiplexer -->
+  <node pkg="nodelet" type="nodelet" name="cmd_vel_mux" args="load yocs_cmd_vel_mux/CmdVelMuxNodelet $(arg manager)">
+    <param name="yaml_cfg_file" value="$(find random_walker_auto_docking)/param/mux.yaml"/>
+    <remap from="cmd_vel_mux/output" to="mobile_base/commands/velocity"/>
+  </node>
+
+  <!-- auto docking -->
+  <node pkg="nodelet" type="nodelet" name="dock_drive" args="load kobuki_auto_docking/AutoDockingNodelet $(arg manager)">
+    <rosparam file="$(find kobuki_auto_docking)/param/auto_docking.yaml" command="load"/>
+    <remap from="dock_drive/odom" to="odom"/>
+    <remap from="dock_drive/core" to="mobile_base/sensors/core"/>
+    <remap from="dock_drive/dock_ir" to="mobile_base/sensors/dock_ir"/>
+    <remap from="dock_drive/motor_power" to="mobile_base/commands/motor_power"/>
+    <remap from="dock_drive/velocity" to="cmd_vel_mux/auto_docking"/>
+  </node>
+
+  <!-- safety controller -->
+  <node pkg="nodelet" type="nodelet" name="kobuki_safety_controller" args="load kobuki_safety_controller/SafetyControllerNodelet $(arg manager)">
+    <remap from="kobuki_safety_controller/cmd_vel" to="cmd_vel_mux/safety_controller"/>
+    <remap from="kobuki_safety_controller/events/bumper" to="mobile_base/events/bumper"/>
+    <remap from="kobuki_safety_controller/events/cliff" to="mobile_base/events/cliff"/>
+    <remap from="kobuki_safety_controller/events/wheel_drop" to="mobile_base/events/wheel_drop"/>
+  </node>
+
+  <!-- random walker -->
+  <node pkg="nodelet" type="nodelet" name="kobuki_random_walker_controller"
+        args="load kobuki_random_walker/RandomWalkerControllerNodelet $(arg manager)">
+    <param name="update_rate"                                       value="10.0"/>
+    <param name="linear_velocity"                                   value="0.1"/>
+    <param name="angular_velocity"                                  value="0.5"/>
+    <remap from="kobuki_random_walker_controller/events/bumper"     to="mobile_base/events/bumper"/>
+    <remap from="kobuki_random_walker_controller/events/cliff"      to="mobile_base/events/cliff"/>
+    <remap from="kobuki_random_walker_controller/events/wheel_drop" to="mobile_base/events/wheel_drop"/>
+    <remap from="kobuki_random_walker_controller/commands/led1"     to="mobile_base/commands/led1"/>
+    <remap from="kobuki_random_walker_controller/commands/led2"     to="mobile_base/commands/led2"/>
+    <remap from="kobuki_random_walker_controller/commands/velocity" to="cmd_vel_mux/random_walker"/>
+  </node>
+
+  <!-- random walker with auto docking -->
+  <param name="AUTODOCK_BATTERY_LEVEL" value="98.0" />
+  <param name="UNDOCK_BATTERY_LEVEL" value="99.0" />
+  <node name="rwad" pkg="random_walker_auto_docking" type="rwad_controller">
+    <remap from="input/rwad" to="cmd_vel_mux/rwad"/>
+  </node>
+
+</launch>
