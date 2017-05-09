@@ -201,8 +201,8 @@ include_directories(
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 add_executable(rwad_controller src/rwad_controller.cpp)
-add_executable(rwad_controller_fixed_dock src/rwad_controller_fixed_dock.cpp)
+#add_executable(rwad_controller_fixed_dock src/rwad_controller_fixed_dock.cpp)
 target_link_libraries(rwad_controller ${catkin_LIBRARIES})
-target_link_libraries(rwad_controller_fixed_dock ${catkin_LIBRARIES})
+#target_link_libraries(rwad_controller_fixed_dock ${catkin_LIBRARIES})
 # add_dependencies(rwad_controller rwad_controller_generate_messages_cpp)
 add_definitions(-std=c++11)

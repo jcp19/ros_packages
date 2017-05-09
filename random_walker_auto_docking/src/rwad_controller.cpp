@@ -9,9 +9,10 @@
 #include "std_msgs/Empty.h"
 #include "geometry_msgs/Twist.h"
 #include <sstream>
+#include <iostream>
 
 // use value 1 if you want to run it in a simulator or value 0 if not
-#define SIMULATOR 0
+#define SIMULATOR 1
 
 #if SIMULATOR
   // when in simultaion, its assumed that the value of the battery is published in the /bokuki_simulation/battery topic
@@ -54,27 +55,41 @@ int main(int argc, char **argv)
 {
   ros::init(argc, argv, "rwad_controller");
   ros::NodeHandle n;
+
+  // topic to read battery level from
   ros::Subscriber sub = n.subscribe(BATTERY_TOPIC, 1, batteryCallback);
+
   ros::Publisher pubVel =  n.advertise<geometry_msgs::Twist>("input/rwad", 10);
   ros::Publisher pubLed =  n.advertise<kobuki_msgs::Led>("mobile_base/commands/led1", 1);
+
+  // random walk control topics
   ros::Publisher enableRandWalk = n.advertise<std_msgs::Empty>("kobuki_random_walker/enable", 1);
   ros::Publisher disableRandWalk = n.advertise<std_msgs::Empty>("kobuki_random_walker/disable", 1);
+
+  // safety controller control topics
   ros::Publisher enableSafetyController = n.advertise<std_msgs::Empty>("kobuki_safety_controller/enable", 1);
   ros::Publisher disableSafetyController = n.advertise<std_msgs::Empty>("kobuki_safety_controller/disable", 1);
+
   actionlib::SimpleActionClient<kobuki_msgs::AutoDockingAction> ac("dock_drive_action", true);
 
   double min, max;
-  if(ros::param::get(std::string("AUTODOCK_BATTERY_LEVEL"), min) && min > 0.0 && min < 100.0) 
+  if(ros::param::get(std::string("AUTODOCK_BATTERY_LEVEL"), min) && min > 0.0 && min < 100.0) {
       MINIMUM_LEVEL=min;
-  if(ros::param::get(std::string("UNDOCK_BATTERY_LEVEL"), max) && max > 0.0 && max <= 100.0 && max > MINIMUM_LEVEL) 
+  }
+  if(ros::param::get(std::string("UNDOCK_BATTERY_LEVEL"), max) && max > 0.0 && max <= 100.0 && max > MINIMUM_LEVEL) {
       MAXIMUM_LEVEL=max;
+  }
+
+  ROS_INFO("Minimum battery value is : %f", MINIMUM_LEVEL);
+  ROS_INFO("Maximum battery value is : %f", MAXIMUM_LEVEL);
+
   ros::Rate r(8);
 
   while(ros::ok()){
     ros::spinOnce();
     if(battery_percentage <= MINIMUM_LEVEL && mode == RANDOM_WALK){
       mode = SEARCHING_DOCK;
-    ROS_INFO("mode:%d, battery_level: %f", mode, battery_percentage);
+      ROS_INFO("mode:%d, battery_level: %f", mode, battery_percentage);
       // start service here
       kobuki_msgs::Led ledmsg;
       ledmsg.value = 3;

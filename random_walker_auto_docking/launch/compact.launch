@@ -1,4 +1,8 @@
 <launch>
+  <!-- parameters for battery control -->
+  <param name="AUTODOCK_BATTERY_LEVEL" value="60.0" />
+  <param name="UNDOCK_BATTERY_LEVEL" value="95.0" />
+
   <!-- Turtlebot -->
   <arg name="base"              default="$(env TURTLEBOT_BASE)"         doc="mobile base type [create, roomba]"/>
   <arg name="battery"           default="$(env TURTLEBOT_BATTERY)"      doc="kernel provided locatio for battery info, use /proc/acpi/battery/BAT0 in 2.6 or earlier kernels." />
