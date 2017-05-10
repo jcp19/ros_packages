@@ -1,0 +1,135 @@
+<launch>
+  <!-- parameters for battery control -->
+  <param name="AUTODOCK_BATTERY_LEVEL" value="60.0" />
+  <param name="UNDOCK_BATTERY_LEVEL" value="95.0" />
+
+  <!-- Turtlebot -->
+  <arg name="base"              value="$(optenv TURTLEBOT_BASE kobuki)" doc="mobile base type [create, roomba]"/>
+  <arg name="battery"           value="$(optenv TURTLEBOT_BATTERY /proc/acpi/battery/BAT0)" doc="kernel provided locatio for battery info, use /proc/acpi/battery/BAT0 in 2.6 or earlier kernels." />
+  <arg name="stacks"            value="$(optenv TURTLEBOT_STACKS hexagons)" doc="stack type displayed in visualisation/simulation [circles, hexagons]"/>
+  <arg name="3d_sensor"         value="$(optenv TURTLEBOT_3D_SENSOR asus_xtion_pro)" doc="3d sensor types [kinect, asux_xtion_pro]"/>
+  <arg name="simulation"        default="$(env TURTLEBOT_SIMULATION)"   doc="set flags to indicate this turtle is run in simulation mode."/>
+  <arg name="serialport"        default="$(env TURTLEBOT_SERIAL_PORT)"  doc="used by create to configure the port it is connected on [/dev/ttyUSB0, /dev/ttyS0]"/>
+  <arg name="robot_name"        default="$(env TURTLEBOT_NAME)"         doc="used as a unique identifier and occasionally to preconfigure root namespaces, gateway/zeroconf ids etc."/>
+  <arg name="robot_type"        default="$(env TURTLEBOT_TYPE)"         doc="just in case you are considering a 'variant' and want to make use of this."/>
+
+  <!-- Simulation -->
+  <arg name="world_file"  default="$(env TURTLEBOT_GAZEBO_WORLD_FILE)"/>
+  <arg name="gui" default="true"/>
+
+  <param name="/use_sim_time" value="$(arg simulation)"/>
+
+
+  <arg name="manager" value="mobile_base_nodelet_manager"/>
+
+  <!-- mobile base nodelet manager -->
+  <node pkg="nodelet" type="nodelet" name="mobile_base_nodelet_manager" args="manager"/>
+
+
+  <group if="$(arg simulation)">
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+      <arg name="use_sim_time" value="true"/>
+      <arg name="debug" value="false"/>
+      <arg name="gui" value="$(arg gui)" />
+      <arg name="world_name" value="$(arg world_file)"/>
+    </include>
+
+    <arg name="urdf_file" default="$(find xacro)/xacro.py '$(find turtlebot_description)/robots/$(arg base)_$(arg stacks)_$(arg 3d_sensor).urdf.xacro'" />
+    <param name="robot_description" command="$(arg urdf_file)" />
+
+    <!-- Gazebo model spawner -->
+    <node name="spawn_turtlebot_model" pkg="gazebo_ros" type="spawn_model"
+          args="$(optenv ROBOT_INITIAL_POSE) -unpause -urdf -param robot_description -model mobile_base"/>
+
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+      <param name="publish_frequency" type="double" value="30.0" />
+    </node>
+
+    <!-- Fake laser -->
+    <node pkg="nodelet" type="nodelet" name="laserscan_nodelet_manager" args="manager"/>
+    <node pkg="nodelet" type="nodelet" name="depthimage_to_laserscan"
+          args="load depthimage_to_laserscan/DepthImageToLaserScanNodelet laserscan_nodelet_manager">
+      <param name="scan_height" value="10"/>
+      <param name="output_frame_id" value="/camera_depth_frame"/>
+      <param name="range_min" value="0.45"/>
+      <remap from="image" to="/camera/depth/image_raw"/>
+      <remap from="scan" to="/scan"/>
+    </node>
+  </group>
+
+  <group unless="$(arg simulation)">
+    <include file="$(find turtlebot_bringup)/launch/includes/robot.launch.xml">
+      <arg name="base" value="$(arg base)" />
+      <arg name="stacks" value="$(arg stacks)" />
+      <arg name="3d_sensor" value="$(arg 3d_sensor)" />
+    </include>
+
+    <!-- mobile base -->
+    <node pkg="nodelet" type="nodelet" name="mobile_base" args="load kobuki_node/KobukiNodelet $(arg manager)">
+      <rosparam file="$(find kobuki_node)/param/base.yaml" command="load"/>
+      <param name="device_port" value="$(arg serialport)" />
+
+      <remap from="mobile_base/odom" to="odom"/>
+      <!-- Don't do this - force applications to use a velocity mux for redirection  
+        <remap from="mobile_base/commands/velocity" to="cmd_vel"/> 
+      -->
+      <remap from="mobile_base/enable" to="enable"/>
+      <remap from="mobile_base/disable" to="disable"/>
+      <remap from="mobile_base/joint_states" to="joint_states"/>
+    </node>
+
+    <include file="$(find turtlebot_bringup)/launch/includes/netbook.launch.xml">
+      <arg name="battery" value="$(arg battery)" />
+    </include>
+  </group>
+
+
+  <!-- bumper/cliff to pointcloud -->
+  <include file="$(find turtlebot_bringup)/launch/includes/kobuki/bumper2pc.launch.xml"/>
+
+  <!-- velocity commands multiplexer -->
+  <node pkg="nodelet" type="nodelet" name="cmd_vel_mux" args="load yocs_cmd_vel_mux/CmdVelMuxNodelet $(arg manager)">
+    <param name="yaml_cfg_file" value="$(find random_walker_auto_docking)/param/mux.yaml"/>
+    <remap from="cmd_vel_mux/output" to="mobile_base/commands/velocity"/>
+  </node>
+
+  <!-- auto docking -->
+  <node pkg="nodelet" type="nodelet" name="dock_drive" args="load kobuki_auto_docking/AutoDockingNodelet $(arg manager)">
+    <rosparam file="$(find kobuki_auto_docking)/param/auto_docking.yaml" command="load"/>
+    <remap from="dock_drive/odom" to="odom"/>
+    <remap from="dock_drive/core" to="mobile_base/sensors/core"/>
+    <remap from="dock_drive/dock_ir" to="mobile_base/sensors/dock_ir"/>
+    <remap from="dock_drive/motor_power" to="mobile_base/commands/motor_power"/>
+    <remap from="dock_drive/velocity" to="cmd_vel_mux/auto_docking"/>
+  </node>
+
+  <!-- safety controller -->
+  <node pkg="nodelet" type="nodelet" name="kobuki_safety_controller" args="load kobuki_safety_controller/SafetyControllerNodelet $(arg manager)">
+    <remap from="kobuki_safety_controller/cmd_vel" to="cmd_vel_mux/safety_controller"/>
+    <remap from="kobuki_safety_controller/events/bumper" to="mobile_base/events/bumper"/>
+    <remap from="kobuki_safety_controller/events/cliff" to="mobile_base/events/cliff"/>
+    <remap from="kobuki_safety_controller/events/wheel_drop" to="mobile_base/events/wheel_drop"/>
+  </node>
+
+  <!-- random walker -->
+  <node pkg="nodelet" type="nodelet" name="kobuki_random_walker_controller"
+        args="load kobuki_random_walker/RandomWalkerControllerNodelet $(arg manager)">
+    <param name="update_rate"                                       value="10.0"/>
+    <param name="linear_velocity"                                   value="0.1"/>
+    <param name="angular_velocity"                                  value="0.5"/>
+    <remap from="kobuki_random_walker_controller/events/bumper"     to="mobile_base/events/bumper"/>
+    <remap from="kobuki_random_walker_controller/events/cliff"      to="mobile_base/events/cliff"/>
+    <remap from="kobuki_random_walker_controller/events/wheel_drop" to="mobile_base/events/wheel_drop"/>
+    <remap from="kobuki_random_walker_controller/commands/led1"     to="mobile_base/commands/led1"/>
+    <remap from="kobuki_random_walker_controller/commands/led2"     to="mobile_base/commands/led2"/>
+    <remap from="kobuki_random_walker_controller/commands/velocity" to="cmd_vel_mux/random_walker"/>
+  </node>
+
+
+  <!-- random walker with auto docking -->
+  <param name="AUTODOCK_BATTERY_LEVEL" value="98.0" />
+  <param name="UNDOCK_BATTERY_LEVEL" value="99.0" />
+  <node name="rwad" pkg="random_walker_auto_docking" type="rwad_controller">
+    <remap from="input/rwad" to="cmd_vel_mux/rwad"/>
+  </node>
+</launch>
