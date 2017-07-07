@@ -14,8 +14,12 @@
 #include <kobuki_msgs/AutoDockingActionGoal.h>
 
 // Dock Coordinates
-float X;
-float Y;
+float dockX;
+float dockY;
+
+// Coordinates 1 meter in front of dock
+float frontX;
+float frontY;
 
 // Robot's state
 float robot_battery = 0.0;
@@ -26,7 +30,7 @@ void doIt(ros::Publisher p){
 }
 
 void battery_callback(const CALLBACK_ARG_TYPE::ConstPtr& msg){
-    int battery_level = msg->robot_battery;
+    int battery_level = msg->BATTERY_FIELD;
     robot_battery = battery_level * 100 / BATTERY_CAPACITY;
 }
 
@@ -77,7 +81,7 @@ int main(int argc, char** argv){
         LOWER_LIMIT = battery_param;
     }
     if(ros::param::get(std::string("rwad2/UNDOCK_BATTERY_LEVEL"), battery_param) && battery_param > 0.0 &&
-            battery_param < 100.0 && battery_param > MINIMUM_LEVEL) {
+            battery_param < 100.0 && battery_param > LOWER_LIMIT) {
         UPPER_LIMIT = battery_param;
     }
 
@@ -101,7 +105,7 @@ int main(int argc, char** argv){
         // Reached docked state
         walking_state(loop_rate);
 
-        //
+        // Reached dock searching state
         searching_dock_state(loop_rate);
     }
 
