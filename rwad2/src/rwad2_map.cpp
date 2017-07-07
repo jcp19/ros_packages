@@ -1,8 +1,15 @@
-#include "ros/ros.h"
+#include <ros/ros.h>
+#include <std_msgs/Empty.h>
+#include <geometry_msgs/Twist.h>
+#include <kobuki_msgs/Led.h>
+#include <move_base_msgs/MoveBaseAction.h>
+#include <actionlib/client/simple_action_client.h>
+#include <kobuki_msgs/AutoDockingAction.h>
+#include <kobuki_msgs/AutoDockingActionGoal.h>
 #include "rwad2.h"
-#include "std_msgs/Empty.h"
-#include "geometry_msgs/Twist.h"
-#include "kobuki_msgs/Led.h"
+
+typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
+typedef actionlib::SimpleActionClient<kobuki_msgs::AutoDockingAction> AutoDockingClient;
 
 // Dock Coordinates
 float dockX = 1.41;
@@ -21,14 +28,61 @@ void do_it(ros::Publisher p){
     p.publish(e);
 }
 
-void go_to_front_of_dock(int orientation = orientation_to_dock){
+bool go_to_front_of_dock(int orientation = orientation_to_dock){
+    bool success;
+    MoveBaseClient mbc("move_base", true);
 
-    // Not Implemented
+    while(!mbc.waitForServer(ros::Duration(2.0)))
+        ROS_INFO("Waiting for move_base server.");
+
+    move_base_msgs::MoveBaseGoal goal;
+
+    goal.target_pose.header.frame_id = "map";
+    goal.target_pose.header.stamp = ros::Time::now();
+
+    goal.target_pose.pose.position.x = frontX;
+    goal.target_pose.pose.position.y = frontY;
+    goal.target_pose.pose.orientation.w = orientation_to_dock;
+
+    mbc.sendGoal(goal);
+
+    mbc.waitForResult();
+
+    if(mbc.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
+        success = true;
+        ROS_INFO("Success: the robot went to the front of the dock.");
+    } else{
+        success = false;
+        ROS_INFO("Insuccess: the robot didn't go to the front of the dock.");
+    }
+
+    return success;
 }
 
-void dock(){
-    go_to_front_of_dock();
-    // Not Implemented
+bool dock(){
+    bool success;
+    bool in_front_of_dock = success = go_to_front_of_dock();
+
+    if(in_front_of_dock){
+        AutoDockingClient adc("dock_drive_action", true);
+        kobuki_msgs::AutoDockingGoal goal;
+
+        while(!adc.waitForServer(ros::Duration(2.0)))
+            ROS_INFO("Waiting for auto docking server.");
+
+        adc.sendGoal(goal);
+        bool finished_before_timeout = adc.waitForResult(ros::Duration(15.0));
+
+        if(finished_before_timeout){
+            ROS_INFO("Success: Robot docked.");
+        } else {
+            success = false;
+            ROS_INFO("Insuccess: Robot didn't dock before the timeout.");
+        }
+
+    }
+
+    return success;
 }
 
 void battery_callback(const CALLBACK_ARG_TYPE::ConstPtr& msg){
@@ -48,10 +102,6 @@ void walking_state(ros::Rate rate){
     }
 }
 
-void searching_dock_state(ros::Rate rate){
-
-}
-
 int main(int argc, char** argv){
     ros::init(argc, argv, "rwad2_controller");
     ros::NodeHandle n;
@@ -60,7 +110,6 @@ int main(int argc, char** argv){
     // subscribes to read battery levels
     ros::Subscriber sub = n.subscribe(BATTERY_TOPIC, 1, battery_callback);
 
-    ros::Publisher pubVel = n.advertise<geometry_msgs::Twist>("input/rwad", 10);
     ros::Publisher pubLed = n.advertise<kobuki_msgs::Led>("mobile_base/commands/led2", 1);
 
     // controls the random walk activity
@@ -83,8 +132,8 @@ int main(int argc, char** argv){
         UPPER_LIMIT = battery_param;
     }
 
-    ROS_INFO("Lower battery limit: %f\n", LOWER_LIMIT);
-    ROS_INFO("Upper battery limit: %f\n", UPPER_LIMIT);
+    ROS_INFO("Lower battery limit: %f.", LOWER_LIMIT);
+    ROS_INFO("Upper battery limit: %f.", UPPER_LIMIT);
 
     // This loop goes through all the states of the automaton in each iteration
     while(ros::ok()){
@@ -96,18 +145,15 @@ int main(int argc, char** argv){
         docked_state(loop_rate);
 
         // Transition to walking state a.k.a undocking
+        do_it(enableSafetyController);
         go_to_front_of_dock();
         do_it(enableRandWalk);
-        do_it(enableSafetyController);
 
-        // Reached docked state
+        // Reached random walking state
         walking_state(loop_rate);
 
-        // Reached dock searching state
-        searching_dock_state(loop_rate);
-
-        // Move the robot to the dock
-        go_to_front_of_dock()
+        // The robot needs power, moves to the dock
+        dock();
     }
 
     return 0;

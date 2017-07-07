@@ -3,6 +3,7 @@ project(rwad2)
 
 ## Compile as C++11
 add_compile_options(-std=c++11)
+add_compile_options(-Wall)
 
 find_package(catkin REQUIRED COMPONENTS
   actionlib
