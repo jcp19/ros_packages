@@ -4,7 +4,7 @@
 #include "kobuki_msgs/SensorState.h"
 #include "std_msgs/UInt8.h"
 // Robot states
-enum STATE {DOCKED, UNDOCKING, WALKING, SEARCHING_DOCK};
+enum STATE {DOCKED, WALKING, SEARCHING_DOCK};
 
 // Battery levels in which state transitions will occur
 float LOWER_LIMIT = 80.0f;

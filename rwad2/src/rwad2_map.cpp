@@ -18,12 +18,36 @@ float X;
 float Y;
 
 // Robot's state
-STATE robot_state = DOCKED;
 float robot_battery = 0.0;
+
+void doIt(ros::Publisher p){
+    std_msgs::Empty e;
+    p.publish(e);
+}
 
 void battery_callback(const CALLBACK_ARG_TYPE::ConstPtr& msg){
     int battery_level = msg->robot_battery;
     robot_battery = battery_level * 100 / BATTERY_CAPACITY;
+}
+
+void docked_state(ros::Rate rate){
+    while(robot_battery <= UPPER_LIMIT){
+        rate.sleep();
+    }
+}
+
+void undocking(){
+
+}
+
+void walking_state(ros::Rate rate){
+    while(robot_battery >= LOWER_LIMIT){
+        rate.sleep();
+    }
+}
+
+void searching_dock_state(ros::Rate rate){
+
 }
 
 int main(int argc, char** argv){
@@ -48,19 +72,38 @@ int main(int argc, char** argv){
     // Checks if the battery levels are defined in the param server and loads
     // them if they do
     double battery_param;
-    if(ros::param::get(std::string("rwad2/AUTODOCK_BATTERY_LEVEL"), battery_param) && battery_param > 0.0 && battery_param < 100.0) {
+    if(ros::param::get(std::string("rwad2/AUTODOCK_BATTERY_LEVEL"), battery_param) && battery_param > 0.0
+       && battery_param < 100.0) {
         LOWER_LIMIT = battery_param;
     }
-    if(ros::param::get(std::string("rwad2/UNDOCK_BATTERY_LEVEL"), battery_param) && battery_param > 0.0 && battery_param < 100.0 && battery_param > MINIMUM_LEVEL) {
+    if(ros::param::get(std::string("rwad2/UNDOCK_BATTERY_LEVEL"), battery_param) && battery_param > 0.0 &&
+            battery_param < 100.0 && battery_param > MINIMUM_LEVEL) {
         UPPER_LIMIT = battery_param;
     }
 
+    ROS_INFO("Lower battery limit: %f\n", LOWER_LIMIT);
+    ROS_INFO("Upper battery limit: %f\n", UPPER_LIMIT);
 
+    // This loop goes through all the states of the automaton in each iteration
     while(ros::ok()){
+        // Transition to docked state
+        doIt(disableRandWalk);
+        doIt(disableSafetyController);
+
+        // Reached docked state
         docked_state(loop_rate);
+
+        // Transition to walking state
         undocking();
-        walking(loop_rate);
-        search_dock(loop_rate);
+        doIt(enableRandWalk);
+        doIt(enableSafetyController);
+
+        // Reached docked state
+        walking_state(loop_rate);
+
+        //
+        searching_dock_state(loop_rate);
     }
 
+    return 0;
 }
