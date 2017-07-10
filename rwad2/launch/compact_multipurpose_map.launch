@@ -125,6 +125,6 @@
   <!-- random walker with auto docking -->
   <param name="AUTODOCK_BATTERY_LEVEL" value="98.0" />
   <param name="UNDOCK_BATTERY_LEVEL" value="95.0" />
-  <node name="rwad2_node" pkg="rwad2_map" type="rwad2">
+  <node name="rwad2_node" pkg="rwad2" type="rwad2_map">
   </node>
 </launch>
