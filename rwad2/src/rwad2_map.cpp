@@ -145,8 +145,8 @@ int main(int argc, char** argv){
         docked_state(loop_rate);
 
         // Transition to walking state a.k.a undocking
-        do_it(enableSafetyController);
         go_to_front_of_dock();
+        do_it(enableSafetyController);
         do_it(enableRandWalk);
 
         // Reached random walking state
