@@ -1,12 +1,14 @@
 #include <ros/ros.h>
 #include <std_msgs/Empty.h>
 #include <geometry_msgs/Twist.h>
+#include <nav_msgs/Odometry.h>
 #include <kobuki_msgs/Led.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
 #include <kobuki_msgs/AutoDockingAction.h>
 #include <kobuki_msgs/AutoDockingActionGoal.h>
 #include "rwad2.h"
+#include <cmath>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 typedef actionlib::SimpleActionClient<kobuki_msgs::AutoDockingAction> AutoDockingClient;
@@ -14,6 +16,10 @@ typedef actionlib::SimpleActionClient<kobuki_msgs::AutoDockingAction> AutoDockin
 // Dock Coordinates
 float dockX = 1.41;
 float dockY = -0.418;
+
+// Robot Coordinates, matches dock coordinates at the beginning
+float robotX = dockX;
+float robotY = dockY;
 
 // Coordinates 1 meter in front of dock
 float frontX = 0.81;
@@ -27,6 +33,8 @@ void do_it(ros::Publisher p){
     std_msgs::Empty e;
     p.publish(e);
 }
+
+
 
 bool go_to_front_of_dock(int orientation = orientation_to_dock){
     bool success;
@@ -51,7 +59,7 @@ bool go_to_front_of_dock(int orientation = orientation_to_dock){
     if(mbc.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
         success = true;
         ROS_INFO("Success: the robot went to the front of the dock.");
-    } else{
+    }else{
         success = false;
         ROS_INFO("Insuccess: the robot didn't go to the front of the dock.");
     }
@@ -88,11 +96,32 @@ bool dock(){
 void battery_callback(const CALLBACK_ARG_TYPE::ConstPtr& msg){
     int battery_level = msg->BATTERY_FIELD;
     robot_battery = battery_level * 100 / BATTERY_CAPACITY;
+    ROS_INFO("Battery level updated: %f", robot_battery);
+}
+
+void odometry_callback(const nav_msgs::Odometry::ConstPtr& msg){
+    robotX = msg->pose.pose.position.x;
+    robotY = msg->pose.pose.position.y;
 }
 
 void docked_state(ros::Rate rate){
     while(robot_battery <= UPPER_LIMIT){
         rate.sleep();
+    }
+}
+
+float distance_squared(float x1, float y1, float x2, float y2){
+    return pow(x1 - x2, 2) + pow(y1 - y2, 2);
+}
+
+// steps back 1 meter from the dock
+void undock(ros::Publisher rwadPub){
+    geometry_msgs::Twist vel;
+    vel.linear.x = -2;
+    ros::Rate r(4);
+    while(distance_squared(robotX, robotY, dockX, dockY) < 1){
+        rwadPub.publish(vel);
+        r.sleep();
     }
 }
 
@@ -108,9 +137,12 @@ int main(int argc, char** argv){
     ros::Rate loop_rate(8);
 
     // subscribes to read battery levels
-    ros::Subscriber sub = n.subscribe(BATTERY_TOPIC, 1, battery_callback);
+    ros::Subscriber subBattery = n.subscribe(BATTERY_TOPIC, 1, battery_callback);
+    // subscribes to read robot Position
+    ros::Subscriber subOdometry = n.subscribe("odom", 1, odometry_callback);
 
-    ros::Publisher pubLed = n.advertise<kobuki_msgs::Led>("mobile_base/commands/led2", 1);
+    ros::Publisher led_topic = n.advertise<kobuki_msgs::Led>("mobile_base/commands/led2", 1);
+    ros::Publisher rwad_topic = n.advertise<geometry_msgs::Twist>("input/rwad",10);
 
     // controls the random walk activity
     auto enableRandWalk = n.advertise<std_msgs::Empty>("kobuki_random_walker/enable", 1);
@@ -145,7 +177,8 @@ int main(int argc, char** argv){
         docked_state(loop_rate);
 
         // Transition to walking state a.k.a undocking
-        go_to_front_of_dock();
+        // go_to_front_of_dock();
+        undock(rwad_topic);
         do_it(enableSafetyController);
         do_it(enableRandWalk);
 
