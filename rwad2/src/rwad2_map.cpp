@@ -10,6 +10,13 @@
 #include "rwad2.h"
 #include <cmath>
 
+/* led colors */
+#define DISABLE 0
+#define GREEN 1
+#define YELLOW 2
+#define RED 3
+
+typedef int LedColor;
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 typedef actionlib::SimpleActionClient<kobuki_msgs::AutoDockingAction> AutoDockingClient;
 
@@ -24,7 +31,6 @@ float robotY = dockY;
 // Coordinates 1 meter in front of dock
 float frontX = 0.81;
 float frontY = -0.124;
-float orientation_to_dock = 0.0;
 
 // Robot's state
 float robot_battery = 0.0;
@@ -34,9 +40,13 @@ void do_it(ros::Publisher p){
     p.publish(e);
 }
 
+void change_color_led(ros::Publisher led_topic, LedColor led_color){
+    kobuki_msgs::Led msg;
+    msg.value = led_color;
+    led_topic.publish(msg);
+}
 
-
-bool go_to_front_of_dock(int orientation = orientation_to_dock){
+bool go_to_front_of_dock(){
     bool success;
     MoveBaseClient mbc("move_base", true);
 
@@ -50,7 +60,6 @@ bool go_to_front_of_dock(int orientation = orientation_to_dock){
 
     goal.target_pose.pose.position.x = frontX;
     goal.target_pose.pose.position.y = frontY;
-    goal.target_pose.pose.orientation.w = orientation_to_dock;
 
     mbc.sendGoal(goal);
 
@@ -68,26 +77,22 @@ bool go_to_front_of_dock(int orientation = orientation_to_dock){
 }
 
 bool dock(){
-    bool success;
-    bool in_front_of_dock = success = go_to_front_of_dock();
+    /* docks the robot, assumes that the robot can see the dock */
+    bool success = true;
+    AutoDockingClient adc("dock_drive_action", true);
+    kobuki_msgs::AutoDockingGoal goal;
 
-    if(in_front_of_dock){
-        AutoDockingClient adc("dock_drive_action", true);
-        kobuki_msgs::AutoDockingGoal goal;
+    while(!adc.waitForServer(ros::Duration(2.0)))
+        ROS_INFO("Waiting for auto docking server.");
 
-        while(!adc.waitForServer(ros::Duration(2.0)))
-            ROS_INFO("Waiting for auto docking server.");
+    adc.sendGoal(goal);
+    bool finished_before_timeout = adc.waitForResult(ros::Duration(15.0));
 
-        adc.sendGoal(goal);
-        bool finished_before_timeout = adc.waitForResult(ros::Duration(15.0));
-
-        if(finished_before_timeout){
-            ROS_INFO("Success: Robot docked.");
-        } else {
-            success = false;
-            ROS_INFO("Insuccess: Robot didn't dock before the timeout.");
-        }
-
+    if(finished_before_timeout){
+        ROS_INFO("Success: Robot docked.");
+    } else {
+        success = false;
+        ROS_INFO("Insuccess: Robot didn't dock before the timeout.");
     }
 
     return success;
@@ -141,12 +146,12 @@ int main(int argc, char** argv){
     // subscribes to read robot Position
     ros::Subscriber subOdometry = n.subscribe("odom", 1, odometry_callback);
 
-    ros::Publisher led_topic = n.advertise<kobuki_msgs::Led>("mobile_base/commands/led2", 1);
+    ros::Publisher led_topic = n.advertise<kobuki_msgs::Led>("mobile_base/commands/led2", 10);
     ros::Publisher rwad_topic = n.advertise<geometry_msgs::Twist>("input/rwad",10);
 
     // controls the random walk activity
-    auto enableRandWalk = n.advertise<std_msgs::Empty>("kobuki_random_walker/enable", 1);
-    auto disableRandWalk = n.advertise<std_msgs::Empty>("kobuki_random_walker/disable", 1);
+    auto enableRandWalk = n.advertise<std_msgs::Empty>("kobuki_random_walker_controller/enable", 1);
+    auto disableRandWalk = n.advertise<std_msgs::Empty>("kobuki_random_walker_controller/disable", 1);
 
     // controls the safety controller activity
     auto enableSafetyController = n.advertise<std_msgs::Empty>("kobuki_safety_controller/enable", 1);
@@ -170,23 +175,32 @@ int main(int argc, char** argv){
     // This loop goes through all the states of the automaton in each iteration
     while(ros::ok()){
         // Transition to docked state
-        do_it(disableRandWalk);
-        do_it(disableSafetyController);
+        // do_it(disableRandWalk);
+        // do_it(disableSafetyController);
 
-        // Reached docked state
+        // Robot in docked state
+        change_color_led(led_topic, GREEN);
         docked_state(loop_rate);
 
         // Transition to walking state a.k.a undocking
         // go_to_front_of_dock();
+        change_color_led(led_topic, YELLOW);
         undock(rwad_topic);
-        do_it(enableSafetyController);
+        change_color_led(led_topic, DISABLE);
         do_it(enableRandWalk);
+        //do_it(enableSafetyController);
+        //do_it(enableRandWalk);
 
         // Reached random walking state
         walking_state(loop_rate);
+        do_it(disableRandWalk);
 
         // The robot needs power, moves to the dock
-        dock();
+        bool in_front_of_dock = go_to_front_of_dock();
+        if(in_front_of_dock){
+            change_color_led(led_topic, RED);
+            dock();
+        }
     }
 
     return 0;
