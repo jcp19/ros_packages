@@ -44,6 +44,7 @@ void change_color_led(ros::Publisher led_topic, LedColor led_color){
     kobuki_msgs::Led msg;
     msg.value = led_color;
     led_topic.publish(msg);
+    ros::spinOnce();
 }
 
 bool go_to_front_of_dock(){
@@ -126,12 +127,14 @@ void undock(ros::Publisher rwadPub){
     ros::Rate r(4);
     while(distance_squared(robotX, robotY, dockX, dockY) < 1){
         rwadPub.publish(vel);
+        ros::spinOnce();
         r.sleep();
     }
 }
 
 void walking_state(ros::Rate rate){
     while(robot_battery >= LOWER_LIMIT){
+        ros::spinOnce();
         rate.sleep();
     }
 }
