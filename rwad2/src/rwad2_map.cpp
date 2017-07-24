@@ -136,6 +136,20 @@ void walking_state(ros::Rate rate){
     }
 }
 
+void load_battery_levels(){
+    // Checks if the battery levels are defined in the param server and loads
+    // them if they do
+    double battery_param;
+    if(ros::param::get(std::string("rwad2/AUTODOCK_BATTERY_LEVEL"), battery_param) && battery_param > 0.0
+       && battery_param < 100.0) {
+        LOWER_LIMIT = battery_param;
+    }
+    if(ros::param::get(std::string("rwad2/UNDOCK_BATTERY_LEVEL"), battery_param) && battery_param > 0.0 &&
+            battery_param < 100.0 && battery_param > LOWER_LIMIT) {
+        UPPER_LIMIT = battery_param;
+    }
+}
+
 int main(int argc, char** argv){
     ros::init(argc, argv, "rwad2_controller");
     ros::NodeHandle n;
@@ -157,20 +171,11 @@ int main(int argc, char** argv){
     auto enableSafetyController = n.advertise<std_msgs::Empty>("kobuki_safety_controller/enable", 1);
     auto disableSafetyController = n.advertise<std_msgs::Empty>("kobuki_safety_controller/disable", 1);
 
-    // Checks if the battery levels are defined in the param server and loads
-    // them if they do
-    double battery_param;
-    if(ros::param::get(std::string("rwad2/AUTODOCK_BATTERY_LEVEL"), battery_param) && battery_param > 0.0
-       && battery_param < 100.0) {
-        LOWER_LIMIT = battery_param;
-    }
-    if(ros::param::get(std::string("rwad2/UNDOCK_BATTERY_LEVEL"), battery_param) && battery_param > 0.0 &&
-            battery_param < 100.0 && battery_param > LOWER_LIMIT) {
-        UPPER_LIMIT = battery_param;
-    }
-
+    load_battery_levels();
     ROS_INFO("Lower battery limit: %f.", LOWER_LIMIT);
     ROS_INFO("Upper battery limit: %f.", UPPER_LIMIT);
+
+    do_it(disableRandWalk);
 
     // This loop goes through all the states of the automaton in each iteration
     while(ros::ok()){
