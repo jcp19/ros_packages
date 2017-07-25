@@ -45,10 +45,12 @@ void change_color_led(ros::Publisher led_topic, LedColor led_color){
     msg.value = led_color;
     led_topic.publish(msg);
     ros::spinOnce();
+    ROS_INFO("Led color changed.");
 }
 
 bool go_to_front_of_dock(){
     bool success;
+    ROS_INFO("Robot going to front of dock.");
     MoveBaseClient mbc("move_base", true);
 
     while(!mbc.waitForServer(ros::Duration(2.0)))
@@ -80,6 +82,7 @@ bool go_to_front_of_dock(){
 bool dock(){
     /* docks the robot, assumes that the robot can see the dock */
     bool success = true;
+    ROS_INFO("Robot going to the dock.");
     AutoDockingClient adc("dock_drive_action", true);
     kobuki_msgs::AutoDockingGoal goal;
 
@@ -112,6 +115,7 @@ void odometry_callback(const nav_msgs::Odometry::ConstPtr& msg){
 
 void docked_state(ros::Rate rate){
     while(robot_battery <= UPPER_LIMIT){
+        ros::spinOnce();
         rate.sleep();
     }
 }
@@ -143,11 +147,11 @@ void load_battery_levels(){
     // Checks if the battery levels are defined in the param server and loads
     // them if they do
     double battery_param;
-    if(ros::param::get(std::string("rwad2/AUTODOCK_BATTERY_LEVEL"), battery_param) && battery_param > 0.0
+    if(ros::param::get(std::string("AUTODOCK_BATTERY_LEVEL"), battery_param) && battery_param > 0.0
        && battery_param < 100.0) {
         LOWER_LIMIT = battery_param;
     }
-    if(ros::param::get(std::string("rwad2/UNDOCK_BATTERY_LEVEL"), battery_param) && battery_param > 0.0 &&
+    if(ros::param::get(std::string("UNDOCK_BATTERY_LEVEL"), battery_param) && battery_param > 0.0 &&
             battery_param < 100.0 && battery_param > LOWER_LIMIT) {
         UPPER_LIMIT = battery_param;
     }
@@ -163,7 +167,7 @@ int main(int argc, char** argv){
     // subscribes to read robot Position
     ros::Subscriber subOdometry = n.subscribe("odom", 1, odometry_callback);
 
-    ros::Publisher led_topic = n.advertise<kobuki_msgs::Led>("mobile_base/commands/led2", 10);
+    ros::Publisher led_topic = n.advertise<kobuki_msgs::Led>("rwad2_controller/led2", 10);
     ros::Publisher rwad_topic = n.advertise<geometry_msgs::Twist>("input/rwad",10);
 
     // controls the random walk activity
@@ -174,41 +178,40 @@ int main(int argc, char** argv){
     auto enableSafetyController = n.advertise<std_msgs::Empty>("kobuki_safety_controller/enable", 1);
     auto disableSafetyController = n.advertise<std_msgs::Empty>("kobuki_safety_controller/disable", 1);
 
+    do_it(disableRandWalk);
+    ROS_INFO("Random Walker Disabled.");
+
     load_battery_levels();
     ROS_INFO("Lower battery limit: %f.", LOWER_LIMIT);
     ROS_INFO("Upper battery limit: %f.", UPPER_LIMIT);
 
-    do_it(disableRandWalk);
-
     // This loop goes through all the states of the automaton in each iteration
     while(ros::ok()){
-        // Transition to docked state
-        // do_it(disableRandWalk);
-        // do_it(disableSafetyController);
-
         // Robot in docked state
         change_color_led(led_topic, GREEN);
+        ROS_INFO("Robot entering in docked state.");
         docked_state(loop_rate);
 
         // Transition to walking state a.k.a undocking
-        // go_to_front_of_dock();
         change_color_led(led_topic, YELLOW);
+        ROS_INFO("Robot undocking.");
         undock(rwad_topic);
+        ROS_INFO("Robot undocked.");
         change_color_led(led_topic, DISABLE);
         do_it(enableRandWalk);
-        //do_it(enableSafetyController);
-        //do_it(enableRandWalk);
 
-        // Reached random walking state
+        // Robot in random walking state
+        ROS_INFO("Robot entering random walk state.");
         walking_state(loop_rate);
-        do_it(disableRandWalk);
 
         // The robot needs power, moves to the dock
-        bool in_front_of_dock = go_to_front_of_dock();
-        if(in_front_of_dock){
-            change_color_led(led_topic, RED);
-            dock();
-        }
+        ROS_INFO("Robot leaving random walk state.");
+        do_it(disableRandWalk);
+        change_color_led(led_topic, RED);
+        while(!go_to_front_of_dock())
+            ROS_INFO("Robot didnt go to the front of the dock.");
+        ROS_INFO("Robot docking.");
+        dock();
     }
 
     return 0;

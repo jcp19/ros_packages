@@ -116,8 +116,6 @@
     <remap from="kobuki_random_walker_controller/events/bumper"     to="mobile_base/events/bumper"/>
     <remap from="kobuki_random_walker_controller/events/cliff"      to="mobile_base/events/cliff"/>
     <remap from="kobuki_random_walker_controller/events/wheel_drop" to="mobile_base/events/wheel_drop"/>
-    <remap from="kobuki_random_walker_controller/commands/led1"     to="mobile_base/commands/led1"/>
-    <remap from="kobuki_random_walker_controller/commands/led2"     to="mobile_base/commands/led2"/>
     <remap from="kobuki_random_walker_controller/commands/velocity" to="cmd_vel_mux/random_walker"/>
   </node>
 
@@ -125,8 +123,9 @@
   <!-- random walker with auto docking -->
   <param name="AUTODOCK_BATTERY_LEVEL" value="90.0" />
   <param name="UNDOCK_BATTERY_LEVEL" value="97.0" />
-  <node name="rwad2_node" pkg="rwad2" type="rwad2_map">
+  <node name="rwad2_node" pkg="rwad2" type="rwad2_map" output="screen">
     <remap from="input/rwad" to="cmd_vel_mux/rwad"/> 
+    <remap from="rwad2_controller/led2"     to="mobile_base/commands/led2"/>
   </node>
 
   <!-- set the map -->
