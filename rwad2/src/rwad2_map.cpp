@@ -171,8 +171,8 @@ int main(int argc, char** argv){
     ros::Publisher rwad_topic = n.advertise<geometry_msgs::Twist>("input/rwad",10);
 
     // controls the random walk activity
-    auto enableRandWalk = n.advertise<std_msgs::Empty>("kobuki_random_walker_controller/enable", 1);
-    auto disableRandWalk = n.advertise<std_msgs::Empty>("kobuki_random_walker_controller/disable", 1);
+    auto enableRandWalk = n.advertise<std_msgs::Empty>("kobuki_random_walker_controller/enable", 1,true);
+    auto disableRandWalk = n.advertise<std_msgs::Empty>("kobuki_random_walker_controller/disable", 1, true);
 
     // controls the safety controller activity
     auto enableSafetyController = n.advertise<std_msgs::Empty>("kobuki_safety_controller/enable", 1);
