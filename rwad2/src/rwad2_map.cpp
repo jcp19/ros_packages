@@ -103,9 +103,14 @@ bool dock(){
 }
 
 void battery_callback(const CALLBACK_ARG_TYPE::ConstPtr& msg){
+    static int count = 0;
     int battery_level = msg->BATTERY_FIELD;
     robot_battery = battery_level * 100 / BATTERY_CAPACITY;
-    ROS_INFO("Battery level updated: %f", robot_battery);
+    count++;
+    if(count == 30){
+        count = 0;
+        ROS_INFO("Battery level updated: %f", robot_battery);
+    }
 }
 
 void odometry_callback(const nav_msgs::Odometry::ConstPtr& msg){
@@ -115,8 +120,8 @@ void odometry_callback(const nav_msgs::Odometry::ConstPtr& msg){
 
 void docked_state(ros::Rate rate){
     while(robot_battery <= UPPER_LIMIT){
-        ros::spinOnce();
         rate.sleep();
+        ros::spinOnce();
     }
 }
 
@@ -129,7 +134,7 @@ void undock(ros::Publisher rwadPub){
     geometry_msgs::Twist vel;
     vel.linear.x = -2;
     ros::Rate r(4);
-    while(distance_squared(robotX, robotY, dockX, dockY) < 1){
+    while(distance_squared(robotX, robotY, dockX, dockY) < 10){
         rwadPub.publish(vel);
         ros::spinOnce();
         r.sleep();
