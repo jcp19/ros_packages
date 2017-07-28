@@ -15,7 +15,7 @@ subscribers:
     timeout:     0.2
     priority:    6
   - name:        "RWAD Controller"
-    topic:       "input/rwad"
+    topic:       "rwad"
     timeout:     1.0
     priority:    8
   - name:        "Action server for autodocking"
