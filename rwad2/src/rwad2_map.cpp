@@ -28,6 +28,10 @@ float dockY = -0.418;
 float robotX = dockX;
 float robotY = dockY;
 
+// Odometry always starts at 0.0, so we need to track the differences over time.
+float odomRobotX = 0.0;
+float odomRobotY = 0.0;
+
 // Coordinates 1 meter in front of dock
 float frontX = 0.81;
 float frontY = -0.124;
@@ -114,35 +118,45 @@ void battery_callback(const CALLBACK_ARG_TYPE::ConstPtr& msg){
 }
 
 void odometry_callback(const nav_msgs::Odometry::ConstPtr& msg){
-    robotX = msg->pose.pose.position.x;
-    robotY = msg->pose.pose.position.y;
+    float x = msg->pose.pose.position.x;
+    float y = msg->pose.pose.position.y;
+    robotX += x - odomRobotX;
+    robotY += y - odomRobotY;
+    odomRobotX = x;
+    odomRobotY = y;
 }
 
-void docked_state(ros::Rate rate){
+void docked_state(ros::Rate rate, ros::Publisher disableSafetyController,
+                  ros::Publisher disableRandWalk){
     while(robot_battery <= UPPER_LIMIT){
-        rate.sleep();
+        do_it(disableSafetyController);
+        do_it(disableRandWalk);
         ros::spinOnce();
+        rate.sleep();
     }
 }
 
-float distance_squared(float x1, float y1, float x2, float y2){
-    return pow(x1 - x2, 2) + pow(y1 - y2, 2);
+float distance(float x1, float y1, float x2, float y2){
+    return sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
 }
 
 // steps back 1 meter from the dock
 void undock(ros::Publisher rwadPub){
     geometry_msgs::Twist vel;
-    vel.linear.x = -2;
+    vel.linear.x = -0.125;
     ros::Rate r(4);
-    while(distance_squared(robotX, robotY, dockX, dockY) < 10){
+    while(ros::ok() && distance(robotX, robotY, dockX, dockY) < 1){
         rwadPub.publish(vel);
         ros::spinOnce();
         r.sleep();
     }
 }
 
-void walking_state(ros::Rate rate){
-    while(robot_battery >= LOWER_LIMIT){
+void walking_state(ros::Rate rate, ros::Publisher enableSafetyController,
+                   ros::Publisher enableRandWalk){
+    while(ros::ok() && robot_battery >= LOWER_LIMIT){
+        do_it(enableSafetyController);
+        do_it(enableRandWalk);
         ros::spinOnce();
         rate.sleep();
     }
@@ -183,6 +197,7 @@ int main(int argc, char** argv){
     auto enableSafetyController = n.advertise<std_msgs::Empty>("kobuki_safety_controller/enable", 1);
     auto disableSafetyController = n.advertise<std_msgs::Empty>("kobuki_safety_controller/disable", 1);
 
+    do_it(disableSafetyController);
     do_it(disableRandWalk);
     ROS_INFO("Random Walker Disabled.");
 
@@ -195,7 +210,8 @@ int main(int argc, char** argv){
         // Robot in docked state
         change_color_led(led_topic, GREEN);
         ROS_INFO("Robot entering in docked state.");
-        docked_state(loop_rate);
+        docked_state(loop_rate, enableSafetyController, enableRandWalk);
+        if (!ros::ok()) return 0;
 
         // Transition to walking state a.k.a undocking
         change_color_led(led_topic, YELLOW);
@@ -203,14 +219,16 @@ int main(int argc, char** argv){
         undock(rwad_topic);
         ROS_INFO("Robot undocked.");
         change_color_led(led_topic, DISABLE);
-        do_it(enableRandWalk);
+        if (!ros::ok()) return 0;
 
         // Robot in random walking state
         ROS_INFO("Robot entering random walk state.");
-        walking_state(loop_rate);
+        walking_state(loop_rate, enableSafetyController, enableRandWalk);
+        if (!ros::ok()) return 0;
 
         // The robot needs power, moves to the dock
         ROS_INFO("Robot leaving random walk state.");
+        do_it(disableSafetyController);
         do_it(disableRandWalk);
         change_color_led(led_topic, RED);
         while(!go_to_front_of_dock())
