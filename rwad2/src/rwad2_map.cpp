@@ -57,12 +57,12 @@ bool go_to_front_of_dock(){
     ROS_INFO("Robot going to front of dock.");
     MoveBaseClient mbc("move_base", true);
 
-    while(!mbc.waitForServer(ros::Duration(2.0)))
+    while(mbc.waitForServer(ros::Duration(2.0)))
         ROS_INFO("Waiting for move_base server.");
 
     move_base_msgs::MoveBaseGoal goal;
 
-    goal.target_pose.header.frame_id = "map";
+    goal.target_pose.header.frame_id = "/map";
     goal.target_pose.header.stamp = ros::Time::now();
 
     goal.target_pose.pose.position.x = frontX;
@@ -90,7 +90,7 @@ bool dock(){
     AutoDockingClient adc("dock_drive_action", true);
     kobuki_msgs::AutoDockingGoal goal;
 
-    while(!adc.waitForServer(ros::Duration(2.0)))
+    while(adc.waitForServer(ros::Duration(2.0)))
         ROS_INFO("Waiting for auto docking server.");
 
     adc.sendGoal(goal);
