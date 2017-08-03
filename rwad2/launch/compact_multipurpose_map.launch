@@ -121,8 +121,8 @@
 
 
   <!-- random walker with auto docking -->
-  <param name="AUTODOCK_BATTERY_LEVEL" value="90.0" />
-  <param name="UNDOCK_BATTERY_LEVEL" value="97.0" />
+  <param name="AUTODOCK_BATTERY_LEVEL" value="98.80" />
+  <param name="UNDOCK_BATTERY_LEVEL" value="99.0" />
   <node name="rwad2_node" pkg="rwad2" type="rwad2_map" output="screen">
     <remap from="input/rwad" to="cmd_vel_mux/rwad"/> 
     <remap from="rwad2_controller/led2"     to="mobile_base/commands/led2"/>
@@ -156,4 +156,9 @@
     <!-- <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>-->
   </include>
  
+   <!-- Move base -->
+  <arg name="custom_param_file" default="$(find turtlebot_navigation)/param/$(arg 3d_sensor)_costmap_params.yaml"/>
+  <include file="$(find turtlebot_navigation)/launch/includes/move_base.launch.xml">
+    <arg name="custom_param_file" value="$(arg custom_param_file)"/>
+  </include>
 </launch>
