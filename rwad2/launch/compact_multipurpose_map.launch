@@ -121,7 +121,7 @@
 
 
   <!-- random walker with auto docking -->
-  <param name="AUTODOCK_BATTERY_LEVEL" value="97.0" />
+  <param name="AUTODOCK_BATTERY_LEVEL" value="94.0" />
   <param name="UNDOCK_BATTERY_LEVEL" value="99.0" />
   <node name="rwad2_node" pkg="rwad2" type="rwad2_map" output="screen">
     <remap from="input/rwad" to="cmd_vel_mux/rwad"/> 

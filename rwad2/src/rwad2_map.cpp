@@ -231,7 +231,7 @@ int main(int argc, char** argv){
         do_it(disableSafetyController);
         do_it(disableRandWalk);
         change_color_led(led_topic, RED);
-        while(!go_to_front_of_dock())
+        if(!go_to_front_of_dock())
             ROS_INFO("Robot didnt go to the front of the dock.");
         ROS_INFO("Robot docking.");
         dock();
